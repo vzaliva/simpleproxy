@@ -1,3 +1,7 @@
+2000-07-25  Vadim Zaliva  <lord@crocodile.org>
+
+	* simpleproxy.c (pass_all): Bug #103361
+
 1999-12-10  Vadim Zaliva  <lord@crocodile.org>
 
 	* simpleproxy.spec (Name): this codebase will be called version 3.0

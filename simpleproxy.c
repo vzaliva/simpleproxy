@@ -469,14 +469,15 @@ void pass_all( int fd, int client )
     int            nsock, retval;
     
     nsock = ((fd > client)? fd: client) + 1;
-    tv.tv_sec  = SELECT_TIMOEOUT_SEC;
-    tv.tv_usec = SELECT_TIMOEOUT_MSEC;
     
     while(1)
     {
         FD_ZERO(&in);
         FD_SET(fd, &in);
         FD_SET(client, &in);
+        
+        tv.tv_sec  = SELECT_TIMOEOUT_SEC;
+        tv.tv_usec = SELECT_TIMOEOUT_MSEC;
         
 	retval = select(nsock, &in, nil, nil, &tv);
         
