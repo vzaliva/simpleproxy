@@ -1,3 +1,8 @@
+2003-03-09  Vadim Zaliva  <lord@zembla.home.crocodile.org>
+
+	* new version number 3.2
+	* simpleproxy.c (main): bugfix from Christophe Bothamy <cbothamy@sourceforge.net>
+
 2000-09-04  Vadim Zaliva  <lord@crocodile.org>
 
 	* simpleproxy.man: 

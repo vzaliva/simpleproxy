@@ -93,7 +93,7 @@
 #define SELECT_TIMOEOUT_SEC  5
 #define SELECT_TIMOEOUT_MSEC 0
 
-static char *SIMPLEPROXY_VERSION = "simpleproxy v3.0 by lord@crocodile.org,vlad@crocodile.org,verylong@crocodile.org";
+static char *SIMPLEPROXY_VERSION = "simpleproxy v3.2 by lord@crocodile.org,vlad@crocodile.org,verylong@crocodile.org";
 static char *SIMPLEPROXY_USAGE   = "simpleproxy -L <[host:]port> -R <host:port> [-d] [-v] [-V] [-7] [-i] [-p PID file] [-P <POP3 accounts list file>] [-f cfgfile] [-D delay in sec.] [-S <HTTPS proxy host:port> [-a <HTTP Auth user>:<HTTP Auth password>] ]";
 static char *PROXY_HEADER = "\nProxy-Authorization: Basic %s";
 
@@ -302,6 +302,7 @@ int main(int ac, char **av)
 
     if(errflg)
     {
+        (void)fprintf(stderr, "%s\n", SIMPLEPROXY_VERSION);
 	(void)fprintf(stderr, "Usage:\n\t%s\n", SIMPLEPROXY_USAGE);
 	exit(1);
     }
