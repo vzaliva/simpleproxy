@@ -94,7 +94,8 @@
 #define SELECT_TIMOEOUT_MSEC 0
 
 static char *SIMPLEPROXY_VERSION = "simpleproxy v3.0 by lord@crocodile.org,vlad@crocodile.org,verylong@crocodile.org";
-static char *SIMPLEPROXY_USAGE   = "simpleproxy -L <[host:]port> -R <host:port> [-d] [-v] [-V] [-7] [-i] [-p PID file] [-P <POP3 accounts list file>] [-f cfgfile] [-D delay in sec.] [-S <HTTPS proxy host:port>]";
+static char *SIMPLEPROXY_USAGE   = "simpleproxy -L <[host:]port> -R <host:port> [-d] [-v] [-V] [-7] [-i] [-p PID file] [-P <POP3 accounts list file>] [-f cfgfile] [-D delay in sec.] [-S <HTTPS proxy host:port> [-a <HTTP Auth user>:<HTTP Auth password>] ]";
+static char *PROXY_HEADER = "\nProxy-Authorization: Basic %s";
 
 struct lst_record
 {
@@ -126,19 +127,22 @@ static int  str2bool(char *s);
 static void parse_host_port(const char *src, char **h_ptr, int *p_ptr);
 static void replace_string(char **dst, const char*src);
 static void fatal();
+static char *base64_encode(char *plaintext);
 
 static int   isVerbose          = 0;
 static int   isDaemon           = 0;
 static int   isStripping        = 0;
 static int   isStartedFromInetd = 0;
+static int   isUsingHTTPAuth    = 0;
 static long  Delay              = 0;
 
 static char *HTTPSProxyHost     = nil;
 static int   HTTPSProxyPort     = -1;
+static char *HTTPBasicAuthString = nil;
 
 static int  SockFD    = -1,
-            SrcSockFD = -1,
-            DstSockFD = -1;
+    SrcSockFD = -1,
+    DstSockFD = -1;
 
 struct lst_record *POPList = nil;
 
@@ -158,9 +162,11 @@ int main(int ac, char **av)
     static struct Cfg *cfg = nil;
     char  *pidfile = nil;
     int    rsp;
+    char  *http_auth = nil;
+    char  *HTTPAuthHash = nil;
 
     /* Check for the arguments, and overwrite values from cfg file */
-    while((c = getopt(ac, av, "iVv7dhL:R:H:f:p:P:D:S:s:")) != -1)
+    while((c = getopt(ac, av, "iVv7dhL:R:H:f:p:P:D:S:s:a:")) != -1)
 	switch (c)
 	{
 	case 'v':
@@ -257,11 +263,28 @@ int main(int ac, char **av)
         case 'h':
             errflg++; // to make it print 'Usage:...'
             break;
+        case 'a':
+            if((HTTPSProxyHost == nil) && (HTTPSProxyPort == -1))
+                fprintf(stderr, "Warning! Proxy authorization (-a) meaningless without HTTPS parameters (-S)\n");
+            isUsingHTTPAuth=1;
+            http_auth=optarg;
+            break;
         default:
 	    errflg++;
 	}
 
     /* let us check options compatibility and completness*/
+
+    if(isUsingHTTPAuth)
+    {
+        HTTPAuthHash        = base64_encode(http_auth);
+        HTTPBasicAuthString = malloc(strlen(HTTPAuthHash) + strlen(PROXY_HEADER));
+        sprintf(HTTPBasicAuthString,PROXY_HEADER,HTTPAuthHash);
+        free(HTTPAuthHash);
+    } else
+    {
+        HTTPBasicAuthString = "";
+    }
 
     if (isStartedFromInetd && lportn > 0)
         errflg++;
@@ -877,8 +900,8 @@ static int https_connect(int DstSockFD, const char *remoteHost, int remotePort)
     long  n;
 
     /* prepare command and connect to remote side */
-    sprintf(buff, "CONNECT %s:%i HTTP/1.0\nUser-agent: %s\n\n",
-            remoteHost, remotePort, SIMPLEPROXY_VERSION);
+    sprintf(buff, "CONNECT %s:%i HTTP/1.0\nUser-agent: %s%s\n\n",
+            remoteHost, remotePort, SIMPLEPROXY_VERSION,HTTPBasicAuthString);
     n = strlen(buff);
     
     if (writen(DstSockFD, buff, n) != n)
@@ -1045,4 +1068,67 @@ void fatal()
         close(DstSockFD);
     logclose();
     exit(1);
+}
+
+static char *base64_encode(char *plaintext)
+{
+    int i;
+    unsigned char dtable[64];
+    char *cryptext = nil;
+    char *ogroup;
+
+    /* Fill dtable with base 64 character encodings.  */
+
+    for (i = 0; i < 26; i++) {
+        dtable[i] = 'A' + i;
+        dtable[26 + i] = 'a' + i;
+    }
+    for (i = 0; i < 10; i++) {
+        dtable[52 + i] = '0' + i;
+    }
+    dtable[62] = '+';
+    dtable[63] = '/';
+
+    cryptext = malloc(strlen(plaintext)*2);
+    ogroup=cryptext;
+
+    while (*plaintext != 0)
+    {
+        unsigned char igroup[3];
+        int n;
+        
+        igroup[0] = igroup[1] = igroup[2] = 0;
+
+        for (n = 0; n < 3; n++)
+        {
+            if(*plaintext != 0)
+                igroup[n]=*plaintext++;
+            else
+                break;
+        }
+        
+        if (n > 0)
+        {
+            ogroup[0] = dtable[igroup[0] >> 2];
+            ogroup[1] = dtable[((igroup[0] & 3) << 4) | (igroup[1] >> 4)];
+            ogroup[2] = dtable[((igroup[1] & 0xF) << 2) | (igroup[2] >> 6)];
+            ogroup[3] = dtable[igroup[2] & 0x3F];
+
+            /* Replace characters in output with "=" pad
+               characters if fewer than three characters were
+               available in the input stream. */
+
+            if (n < 3) {
+                ogroup[3] = '=';
+                if (n < 2) {
+                    ogroup[2] = '=';
+                }
+            }
+
+            ogroup += 4;
+
+        }
+    }
+    *ogroup = '\0';
+    return cryptext;
 }
