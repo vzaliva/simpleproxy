@@ -1,3 +1,8 @@
+2003-11-08  Vadim Zaliva  <lord@zembla.home.crocodile.org>
+
+	* simpleproxy.c (parse_host_port): Patch from 'apollock' accepted
+	which fixes bug #823883.
+
 2003-05-07  Vadim Zaliva  <lord@zembla.home.crocodile.org>
 
 	* cfg.c (readcfg): closing files when reading Cfg

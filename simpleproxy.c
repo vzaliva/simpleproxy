@@ -614,7 +614,7 @@ void parse_host_port(const char *src, char ** h_ptr, int *p_ptr)
             atoi(tmp):
             (((se = getservbyname(tmp, "tcp")) == nil)?
              -1:
-             se->s_port);
+             ntohs(se->s_port));
     }
 }
 
