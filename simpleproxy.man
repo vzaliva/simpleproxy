@@ -1,4 +1,4 @@
-.TH SIMPLEPROXY 1 "Version 2.3b"
+.TH SIMPLEPROXY 1 "Version 3.0"
 .ds ]W November 1998
 .SH NAME
 simpleproxy \- Simple tcp socket proxy
@@ -66,10 +66,16 @@ Only \fItcp\fP ports are supported.
 .PP
 .SH SEE ALSO
 .PP
-inetd(1M), services(4)
+inetd(1M), services(4), http://www.crocodile.org/software.html
+
 .SH AUTHOR
 .PP
 Vadim Zaliva <lord@crocodile.org>,
 Vladimir Karpinsky  <vlad@crocodile.org>
+Vadim Tymchenko <verylong@crocodile.org>
+
+.SH CONTRIBUTORS
+.PP
+Pavel Roskin <pavel_roskin@geocities.com>
 
 

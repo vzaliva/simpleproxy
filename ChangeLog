@@ -1,3 +1,9 @@
+1999-12-10  Vadim Zaliva  <lord@crocodile.org>
+
+	* simpleproxy.spec (Name): this codebase will be called version 3.0
+
+	* simpleproxy.c: minor compilation warning fixes and win32 compatibility from Pavel Roskin <pavel_roskin@geocities.com>
+
 1999-09-24  Vadim Zaliva  <lord@crocodile.org>
 
 	* cfg.c (cfg_new_entry): bug found by compauqe compiler corrected.

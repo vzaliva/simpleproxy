@@ -93,7 +93,7 @@
 #define SELECT_TIMOEOUT_SEC  5
 #define SELECT_TIMOEOUT_MSEC 0
 
-static char *SIMPLEPROXY_VERSION = "simpleproxy v2.3b by lord@crocodile.org,vlad@crocodile.org,verylong@crocodile.org";
+static char *SIMPLEPROXY_VERSION = "simpleproxy v3.0 by lord@crocodile.org,vlad@crocodile.org,verylong@crocodile.org";
 static char *SIMPLEPROXY_USAGE   = "simpleproxy -L <[host:]port> -R <host:port> [-d] [-v] [-V] [-7] [-i] [-p PID file] [-P <POP3 accounts list file>] [-f cfgfile] [-D delay in sec.] [-S <HTTPS proxy host:port>]";
 
 struct lst_record
@@ -364,6 +364,7 @@ int main(int ac, char **av)
             case 0: /* Child */
 		hp = gethostbyaddr((char *)&cli_addr, clien, AF_INET);
 		client_name = strdup(hp?(hp->h_name): inet_ntoa(cli_addr.sin_addr));
+
                 /*
                  * I don't know is that a bug, but on Irix 6.2 parent 
                  * process will not be able to accept any new connection 

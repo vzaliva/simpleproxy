@@ -1,4 +1,4 @@
-Simpleproxy v2.3b
+Simpleproxy v3.0
 
 Vadim Zaliva <lord@crocodile.org>
 Vlad Karpinsky <vlad@crocodile.org>
@@ -21,7 +21,13 @@ Can be used, for example, to run local irc client through proxy
 started at ISP shell account, if some IRC serverc does not allow you
 to connect directly.
 
-Latest version always can be found at ftp://ftp.crocodile.org/pub/
-WWW page is http://www.crocodile.org/software.html
+Latest version always can be found at http://www.crocodile.org/software.html
+
+Please use bug tracking system (follow link from WWW page
+to report bugs).
+
+If you want to send us patch, please use `diff -u` command.
+
+
 
 
