@@ -182,6 +182,7 @@ struct Cfg *readcfg(const char *name)
                 {
                     /* internal buffer overflow */
                     freecfg(cfg);
+                    fclose(f);
                     return NULL;
                 }
             }
@@ -237,6 +238,7 @@ struct Cfg *readcfg(const char *name)
                     {
                         /* internal buffer overflow */
                         freecfg(cfg);
+                        fclose(f);
                         return NULL;
                     }
                 }
@@ -254,6 +256,7 @@ struct Cfg *readcfg(const char *name)
                 {
                     /* internal buffer overflow */
                     freecfg(cfg);
+                    fclose(f);
                     return NULL;
                 }
             }
@@ -267,6 +270,7 @@ struct Cfg *readcfg(const char *name)
     }
 
     sortcfg(cfg);
+    fclose(f);
     return cfg;
 }
 
