@@ -1,0 +1,14 @@
+$Id$
+
+. getclient for INETD.
+
+. not only PASS auth in POP3 supported. We need to support MD5 as well.
+
+. better command-line synax.
+
+. add distinctive application return codes and document them in man page.
+
+. add an option to control how long connection could be idle before terminated by simpleproxy.
+
+. add option to control max. number of simultaneous connections
+

@@ -1,0 +1,75 @@
+.TH SIMPLEPROXY 1 "Version 2.3b"
+.ds ]W November 1998
+.SH NAME
+simpleproxy \- Simple tcp socket proxy
+.SH SYNOPSIS
+.ta 6n
+\fBsimpleproxy\fP 
+[-7]
+[-v]
+[-V]
+[-d]
+[-i]
+-P <\fIPOP3 users file\fP>
+-L [<\fIlocal host\fP>:]<\fIlocal port\fP>
+-R <\fIremote host\fP>:<\fIremote port\fP>
+-S <\fIproxy host\fP>:<\fIproxy port\fP>
+ 
+.br
+.SH DESCRIPTION
+The 
+.I simpleproxy 
+program acts as simple tcp proxy. It listens for local socket, and
+any connection to this port will be forwarded to another socket
+at remote host.
+
+.SH OPTIONS
+.PP
+.I simpleproxy\fP accepts following options:
+.TP 8
+.B \-V
+Version information.
+.TP 8
+.B \-v
+Makes \fIsimpleproxy\fP to write activity information to \fIsyslog\fP or \fIstderr\fP.
+.TP 8
+.B \-7
+Makes \fIsimpleproxy\fP to strip 8th bit.
+.TP 8
+.B \-i
+Use this flag when starting \fIsimpleproxy\fP from INETD.
+.TP 8
+.B \-d
+By default \fIsimpleproxy\fP does not detach itself from control terminal and writes all
+messages to \fIstderr\fP. This option will detach it from terminal and make it write
+messages to  \fIsyslog\fP.
+.TP 8
+.B \-L  [<\fIlocal host\fP>:]<\fIlocal port\fP>
+Local host and port name or number to bind for listening. Host name is optional.
+.TP 8
+.B \-R <\fIremote host\fP>:<\fIremote port\fP>
+Remote host and port name or number
+.TP 8
+.B \-P \fP<\fIPOP3 users list\fP>
+If you specify this option simpleproxy will load list of
+users from the <filename> (one per line). After this it will be
+forwarding POP3 sessions only if client trying to authenificate as
+this user.
+.TP 8
+.B \-S <\fIproxy host\fP>:<\fIproxy port\fP>
+HTTPS proxy server host and port name or number.
+
+.SH BUGS\ \ \ \        
+Only \fItcp\fP ports are supported.
+.TP8
+
+.PP
+.SH SEE ALSO
+.PP
+inetd(1M), services(4)
+.SH AUTHOR
+.PP
+Vadim Zaliva <lord@crocodile.org>,
+Vladimir Karpinsky  <vlad@crocodile.org>
+
+

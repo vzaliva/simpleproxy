@@ -1,0 +1,27 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(simpleproxy.c)
+
+dnl Checks for programs.
+AC_PROG_CC
+AC_PROG_INSTALL 
+AC_CHECK_PROG(LINT,lint)
+
+dnl Checks for libraries.
+AC_CHECK_LIB(nsl, gethostbyname)
+AC_CHECK_LIB(socket, connect)
+
+dnl Checks for header files.
+AC_HEADER_STDC
+AC_HEADER_SYS_WAIT
+AC_CHECK_HEADERS(fcntl.h sys/time.h syslog.h termio.h unistd.h sys/filio.h stropts.h)
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_HEADER_TIME
+
+dnl Checks for library functions.
+AC_TYPE_SIGNAL
+AC_FUNC_VPRINTF
+AC_CHECK_FUNCS(syslog openlog closelog select socket strdup strerror strtol vsnprintf vsprintf)
+
+AC_OUTPUT(Makefile)

@@ -1,0 +1,27 @@
+Simpleproxy v2.3b
+
+Vadim Zaliva <lord@crocodile.org>
+Vlad Karpinsky <vlad@crocodile.org>
+Vadim Tymchenko <verylong@crocodile.org>
+
+Simpleproxy program acts as simple tcp proxy. It listens for local
+socket, and any connection to this port will be forwarded to another
+socket at remote host.
+
+If you specify '-P <filename>' option simpleproxy will load list of
+users from the <filename> (one per line). After this it will be
+forwarding POP3 sessions only if client trying to authenificate as
+this user.
+
+Tested on Linux, SunOS, Solaris.
+        
+To install run `./configure`. Then, do 'make install'.
+
+Can be used, for example, to run local irc client through proxy
+started at ISP shell account, if some IRC serverc does not allow you
+to connect directly.
+
+Latest version always can be found at ftp://ftp.crocodile.org/pub/
+WWW page is http://www.crocodile.org/software.html
+
+

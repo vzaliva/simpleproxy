@@ -1,0 +1,6 @@
+# This file lists users whose requests will be forwarded 
+# by simpleproxy(1) if it is started in POP3 mode.
+#
+guest
+pascal
+lord

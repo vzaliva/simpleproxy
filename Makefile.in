@@ -1,0 +1,48 @@
+# $Id$
+
+# Solaris 2.5
+#CFLAGS=-fd -O -v -Xc -D__EXTENSIONS__ -DSUN
+
+CC=@CC@
+CFLAGS=@CFLAGS@ @DEFS@
+LIBS=@LIBS@
+INSTALL = @INSTALL@
+LINT=@LINT@
+
+top_srcdir=@top_srcdir@
+srcdir=@srcdir@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+mandir=@mandir@
+
+RM=rm -f
+
+all: simpleproxy
+
+lint:
+	$(LINT) simpleproxy.c cfg.c
+
+clean:
+	$(RM) *.o simpleproxy *~ core
+
+distclean: clean
+	rm -f config.log config.cache config.status Makefile
+
+install: simpleproxy
+	$(top_srcdir)/mkinstalldirs $(bindir)
+	$(INSTALL)   simpleproxy $(bindir)
+	$(top_srcdir)/mkinstalldirs $(mandir)/man1
+	$(INSTALL)   simpleproxy.man $(mandir)/man1/simpleproxy.1
+
+simpleproxy: simpleproxy.o cfg.o Makefile
+	$(CC) $(CFLAGS) -o simpleproxy simpleproxy.o cfg.o $(LIBS)
+
+.c.o:
+	$(CC) $(CFLAGS) -c $<
+
+cfg.o: cfg.c cfg.h Makefile
+simpleproxy.o: simpleproxy.c cfg.h Makefile
+
+
+

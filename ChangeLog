@@ -1,0 +1,83 @@
+1999-09-24  Vadim Zaliva  <lord@crocodile.org>
+
+	* cfg.c (cfg_new_entry): bug found by compauqe compiler corrected.
+
+1999-09-15  Vadim Zaliva  <lord@crocodile.org>
+
+	* cfg.c: max token length check.
+
+	* Makefile.in (distclean): distclean added
+
+1999-08-17  Vadim Zaliva  <lord@crocodile.org>
+
+	* cfg.c (readcfg): small memory leak removed.
+
+1999-06-28  Vadim Zaliva  <lord@crocodile.org>
+
+	* simpleproxy.c (trim): some funny code removed.
+	(main): releasing memory after reading cfg.
+
+	* cfg.c: new implementation.
+
+1999-06-07  Vlad Karpinsky  <vlad@crocodile.org>
+
+	* simpleproxy.c Optimization, brush up.
+
+1999-05-27  Vlad Karpinsky  <vlad@crocodile.org>
+
+	* simpleproxy.c New syntax for command line options (old is still supported). 
+	  Config file reading. Brush up.
+
+1999-04-22  Vadim Zaliva  <lord@crocodile.org>
+
+	* simpleproxy.c (main): Reading cfg file and processing options.
+	(main): Better checks for options compatibility.
+
+1999-04-20  Vadim Zaliva  <lord@crocodile.org>
+
+	* simpleproxy.c (log): type argument added.
+	(logopen): warning when compiled without syslog added.
+	(main): error notification on failed POP3 login.
+	(main): return error code '1' if pop3 login failed.
+	(log): LOG_DEBUG messages printed only if compiled with DEBUG
+	(pop3login): pop3 logic is greatly improved. now we loop in finite automate here. Also we process more erroneus sitiuations. Potential security flaw removed.
+
+1999-04-16  Vadim Zaliva  <lord@crocodile.org>
+
+	* sample.cfg: sample cfg file created.
+
+	* simpleproxy.c: Reading cfg file mechanism replaced by new one from cfg.c. All platform dependency checks are done with Autoconf now. Different portability improvements.
+	GPL comment added to simpleproxy.c
+
+1999-04-07  Vadim Zaliva  <lord@crocodile.org>
+
+	* Makefile.in: GNU autoconf. (First step. Still needs better integraion with RPM building).
+
+Mon Nov 16 14:23:33 PST 1998 Vlad Karpinsky <vlad@crocodile.org>
+
+	* spec file updates from Pavel Roskin <pavel_roskin@geocities.com>
+        * inserted.
+
+Wed Nov 11 15:18:34 1998  Vadim Zaliva  <lord@freefall.freebsd.org>
+
+	* Compiled under FreeBSD-2.2.7
+
+1998-11-11  Vadim Zaliva  <lord@crocodile.org>
+
+	* simpleproxy.man spelling and formating according to comments from Pavel Roskin <pavel_roskin@geocities.com>
+
+1998-09-14  Vlad Karpinsky <vlad@crocodile.org>
+	
+	* Version 2.2b-1 No changes. New version released.
+
+1998-09-13  Vadim Zaliva <lord@crocodile.org>
+
+	* Added shutdown to make sure all sockets are properly closed.
+
+1998-09-10  Vadim Zaliva  <lord@crocodile.org>
+
+	* FTP and WWW locations added to readme. Chagelog added to spec.
+
+	* spec file corrected to reflect recent version number (2.2a)
+	
+
