@@ -1,5 +1,5 @@
-.TH SIMPLEPROXY 1 "Version 3.0"
-.ds ]W November 1998
+.TH SIMPLEPROXY 1 "Version 3.1"
+.ds ]W July 2000
 .SH NAME
 simpleproxy \- Simple tcp socket proxy
 .SH SYNOPSIS
@@ -19,9 +19,8 @@ simpleproxy \- Simple tcp socket proxy
 .SH DESCRIPTION
 The 
 .I simpleproxy 
-program acts as simple tcp proxy. It listens for local socket, and
-any connection to this port will be forwarded to another socket
-at remote host.
+program acts as a simple tcp proxy. It opens listening socket on
+local machine and forwards any connection to the remote host.
 
 .SH OPTIONS
 .PP

@@ -2,11 +2,11 @@ Name: simpleproxy
 Summary: Simple TCP/IP proxy.
 Packager: Vlad Karpinsky <vlad@crocodile.org>
 Url: http://www.crocodile.org/software.html
-Version: 3.0
+Version: 3.1
 Release: 1
 Copyright: Vadim Zaliva <lord@crocodile.org>, Vlad Karpinsky <vlad@crocodile.org>, Vadim Tymchenko <verylong@crocodile.org>
 Group: Daemons
-Source: ftp://ftp.crocodile.org/pub/simpleproxy-3.0.tar.gz
+Source: ftp://ftp.crocodile.org/pub/simpleproxy-3.1.tar.gz
 BuildRoot: /tmp/simpleproxy
 
 %description
@@ -15,7 +15,7 @@ Can use HTTPs proxy to penetrate firewalls.
 
 %prep
 rm -rf $RPM_BUILD_ROOT
-%setup -n simpleproxy
+%setup 
 
 %build
 ./configure --prefix=$RPM_BUILD_ROOT/usr

@@ -1,3 +1,7 @@
+2000-07-27  Vlad Karpinsky <vlad@crocodile.org>
+
+	* new version number 3.1
+
 2000-07-25  Vadim Zaliva  <lord@crocodile.org>
 
 	* simpleproxy.c (pass_all): Bug #103361
