@@ -41,7 +41,9 @@
 #include <sys/wait.h>
 #endif 
 #include <sys/socket.h>
-#include <sys/un.h>
+#ifndef _WIN32
+# include <sys/un.h>
+#endif
 #include <sys/uio.h>
 #if HAVE_UNISTD_H
 #include <unistd.h>
@@ -149,7 +151,6 @@ int main(int ac, char **av)
     struct hostent *hp;
     char  *client_name;
     extern char *optarg;
-    extern int  optind;
     int    c;
     int    errflg = 0;
     char  *cfgfile = nil;
@@ -321,7 +322,7 @@ int main(int ac, char **av)
 	serv_addr.sin_addr.s_addr = ((lhost && *lhost)? get_hostaddr(lhost): htonl(INADDR_ANY));
 	serv_addr.sin_port = htons(lportn);
 
-        if (setsockopt(SockFD, SOL_SOCKET, SO_REUSEADDR, &rsp, sizeof(rsp)))
+        if (setsockopt(SockFD, SOL_SOCKET, SO_REUSEADDR, (void*)&rsp, sizeof(rsp)))
             log(LOG_ERR,"Error setting socket options");
         
 	if (bind(SockFD, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
@@ -606,7 +607,6 @@ static struct lst_record *load_pop3_list(const char *popfile)
 {
     FILE *f;
     char str[2048];
-    char *s;
     struct lst_record *first = nil;
     struct lst_record *last  = nil;
     
@@ -626,10 +626,10 @@ static struct lst_record *load_pop3_list(const char *popfile)
 
 	if(first==nil)
 	{
-	    first=malloc(sizeof(struct lst_record));
+	    first=(struct lst_record *)malloc(sizeof(struct lst_record));
 	    last=first;
 	} else {
-	    last->next=malloc(sizeof(struct lst_record));
+	    last->next=(struct lst_record *)malloc(sizeof(struct lst_record));
 	    last=last->next;
 	}
 	last->s=strdup(str);
