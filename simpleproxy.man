@@ -82,4 +82,4 @@ Vadim Tymchenko <verylong@crocodile.org>
 .PP
 Pavel Roskin <pavel_roskin@geocities.com>,
 Cedric Tefft <cedric@earthling.net>
-
+Christophe Bothamy <cbothamy@sourceforge.net>

@@ -161,7 +161,7 @@ int main(int ac, char **av)
     char  *popfile = nil;
     static struct Cfg *cfg = nil;
     char  *pidfile = nil;
-    int    rsp;
+    int    rsp = 1;
     char  *http_auth = nil;
     char  *HTTPAuthHash = nil;
 
