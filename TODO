@@ -12,3 +12,4 @@ $Id$
 
 . add option to control max. number of simultaneous connections
 
+. improve support of tracing 

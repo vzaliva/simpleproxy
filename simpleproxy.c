@@ -94,7 +94,7 @@
 #define SELECT_TIMOEOUT_MSEC 0
 
 static char *SIMPLEPROXY_VERSION = "simpleproxy v3.2 by lord@crocodile.org,vlad@crocodile.org,verylong@crocodile.org";
-static char *SIMPLEPROXY_USAGE   = "simpleproxy -L <[host:]port> -R <host:port> [-d] [-v] [-V] [-7] [-i] [-p PID file] [-P <POP3 accounts list file>] [-f cfgfile] [-D delay in sec.] [-S <HTTPS proxy host:port> [-a <HTTP Auth user>:<HTTP Auth password>] ]";
+static char *SIMPLEPROXY_USAGE   = "simpleproxy -L <[host:]port> -R <host:port> [-d] [-v] [-V] [-7] [-i] [-p PID file] [-P <POP3 accounts list file>] [-f cfgfile] [-t tracefile] [-D delay in sec.] [-S <HTTPS proxy host:port> [-a <HTTP Auth user>:<HTTP Auth password>] ]";
 static char *PROXY_HEADER = "\nProxy-Authorization: Basic %s";
 
 struct lst_record
@@ -128,6 +128,7 @@ static void parse_host_port(const char *src, char **h_ptr, int *p_ptr);
 static void replace_string(char **dst, const char*src);
 static void fatal();
 static char *base64_encode(char *plaintext);
+static void trace(int fd, char *buf, int siz);
 
 static int   isVerbose          = 0;
 static int   isDaemon           = 0;
@@ -139,6 +140,7 @@ static long  Delay              = 0;
 static char *HTTPSProxyHost     = nil;
 static int   HTTPSProxyPort     = -1;
 static char *HTTPBasicAuthString = nil;
+static char *Tracefile          = nil;
 
 static int  SockFD    = -1,
     SrcSockFD = -1,
@@ -166,23 +168,23 @@ int main(int ac, char **av)
     char  *HTTPAuthHash = nil;
 
     /* Check for the arguments, and overwrite values from cfg file */
-    while((c = getopt(ac, av, "iVv7dhL:R:H:f:p:P:D:S:s:a:")) != -1)
-	switch (c)
-	{
-	case 'v':
-	    isVerbose++;
-	    break;
-	case 'i':
-	    isStartedFromInetd++;
-	    break;
-	case 'd':
-	    isDaemon++;
-	    break;
-	case 'p':
-	    replace_string(&pidfile, optarg);
-	    break;
-	case 'f':
-	    replace_string(&cfgfile, optarg);
+    while((c = getopt(ac, av, "iVv7dhL:R:H:f:p:P:D:S:s:a:t:")) != -1)
+        switch (c)
+        {
+        case 'v':
+            isVerbose++;
+            break;
+        case 'i':
+            isStartedFromInetd++;
+            break;
+        case 'd':
+            isDaemon++;
+            break;
+        case 'p':
+            replace_string(&pidfile, optarg);
+            break;
+        case 'f':
+            replace_string(&cfgfile, optarg);
             if(cfgfile)
             {
                 if((cfg=readcfg(cfgfile))==nil)
@@ -228,29 +230,32 @@ int main(int ac, char **av)
                     tmp = cfgfind("HTTPSProxyHost",cfg, 0);
                     if(tmp && !HTTPSProxyHost)
                         parse_host_port(tmp, &HTTPSProxyHost, &HTTPSProxyPort);
-
+                    tmp = cfgfind("TraceFile", cfg, 0);
+                    if(tmp && !Tracefile)
+                        replace_string(&Tracefile, tmp);
+                    
                     freecfg(cfg);
                 }
             }
             break;
         case 'L':
             parse_host_port(optarg, &lhost, &lportn);
-	    break;
-	case 'P':
-	    replace_string(&popfile, optarg);
-	    break;
-	case 'R':
-	    parse_host_port(optarg, &rhost, &rportn);
-	    break;
-	case 'H':
-	    replace_string(&rhost, optarg);
-	    break;
-	case 'D':
-	    Delay = atol(optarg);
-	    break;
-	case '7':
-	    isStripping = 1;
-	    break;
+            break;
+        case 'P':
+            replace_string(&popfile, optarg);
+            break;
+        case 'R':
+            parse_host_port(optarg, &rhost, &rportn);
+            break;
+        case 'H':
+            replace_string(&rhost, optarg);
+            break;
+        case 'D':
+            Delay = atol(optarg);
+            break;
+        case '7':
+            isStripping = 1;
+            break;
         case 'S':
             parse_host_port(optarg, &HTTPSProxyHost, &HTTPSProxyPort);
             break;
@@ -266,12 +271,15 @@ int main(int ac, char **av)
         case 'a':
             if((HTTPSProxyHost == nil) && (HTTPSProxyPort == -1))
                 fprintf(stderr, "Warning! Proxy authorization (-a) meaningless without HTTPS parameters (-S)\n");
-            isUsingHTTPAuth=1;
-            http_auth=optarg;
+            isUsingHTTPAuth = 1;
+            http_auth = optarg;
+            break;
+        case 't':
+            replace_string(&Tracefile, optarg);
             break;
         default:
-	    errflg++;
-	}
+            errflg++;
+        }
 
     /* let us check options compatibility and completness*/
 
@@ -303,8 +311,8 @@ int main(int ac, char **av)
     if(errflg)
     {
         (void)fprintf(stderr, "%s\n", SIMPLEPROXY_VERSION);
-	(void)fprintf(stderr, "Usage:\n\t%s\n", SIMPLEPROXY_USAGE);
-	exit(1);
+        (void)fprintf(stderr, "Usage:\n\t%s\n", SIMPLEPROXY_USAGE);
+        exit(1);
     }
 
     logopen();
@@ -324,36 +332,36 @@ int main(int ac, char **av)
     }
 
     if (popfile)
-	POPList = load_pop3_list(popfile);
+        POPList = load_pop3_list(popfile);
 
     if (!isStartedFromInetd)
     {
-	/* Let's become a daemon */
-	if(isDaemon)
-	    daemon_start(); 
-	
-	if(pidfile)
-	    write_pid(pidfile);
-	
-	if((SockFD = socket(AF_INET,SOCK_STREAM,0)) < 0)
-	{
+        /* Let's become a daemon */
+        if(isDaemon)
+            daemon_start(); 
+    
+        if(pidfile)
+            write_pid(pidfile);
+    
+        if((SockFD = socket(AF_INET,SOCK_STREAM,0)) < 0)
+        {
             log(LOG_ERR,"Error creating socket.");
             fatal();
-	}
-	
-	memset((void *)&serv_addr, 0, sizeof(serv_addr));
-	serv_addr.sin_family = AF_INET;
-	serv_addr.sin_addr.s_addr = ((lhost && *lhost)? get_hostaddr(lhost): htonl(INADDR_ANY));
-	serv_addr.sin_port = htons(lportn);
+        }
+    
+        memset((void *)&serv_addr, 0, sizeof(serv_addr));
+        serv_addr.sin_family = AF_INET;
+        serv_addr.sin_addr.s_addr = ((lhost && *lhost)? get_hostaddr(lhost): htonl(INADDR_ANY));
+        serv_addr.sin_port = htons(lportn);
 
         if (setsockopt(SockFD, SOL_SOCKET, SO_REUSEADDR, (void*)&rsp, sizeof(rsp)))
             log(LOG_ERR,"Error setting socket options");
         
-	if (bind(SockFD, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-	{
+        if (bind(SockFD, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+        {
             log(LOG_ERR,"Error binding socket.");
             fatal();
-	}
+        }
         
         log(LOG_INFO,"Waiting for connections.");
 
@@ -362,32 +370,32 @@ int main(int ac, char **av)
             log(LOG_ERR,"Error listening socket: %s", strerror(errno));
             fatal();
         }
-	
-	while (1)
-	{
+    
+        while (1)
+        {
             clien = sizeof(cli_addr);
             
             SrcSockFD = accept(SockFD,(struct sockaddr *)&cli_addr, &clien);
             
             if(SrcSockFD < 0)
             {
-                if (errno == EINTR) /* Interrupt after SIGCHLD */
+                if (errno == EINTR || errno == ECHILD) /* Interrupt after SIGCHLD */
                     continue;
                 log(LOG_ERR, "accept error - %s", strerror(errno));
                 fatal();
             }
             
-	    signal(SIGCHLD, child_dead);
-	    
-	    switch (fork())
+            signal(SIGCHLD, child_dead);
+        
+            switch (fork())
             {
-	    case -1: /* fork error */
+            case -1: /* fork error */
                 log(LOG_ERR,"fork error - %s", strerror(errno));
                 break;
                 
             case 0: /* Child */
-		hp = gethostbyaddr((char *)&cli_addr, clien, AF_INET);
-		client_name = strdup(hp?(hp->h_name): inet_ntoa(cli_addr.sin_addr));
+                hp = gethostbyaddr((char *)&cli_addr, clien, AF_INET);
+                client_name = strdup(hp?(hp->h_name): inet_ntoa(cli_addr.sin_addr));
 
                 /*
                  * I don't know is that a bug, but on Irix 6.2 parent 
@@ -397,9 +405,9 @@ int main(int ac, char **av)
                 
                 /* (void)shutdown(SockFD,2); */
                 /* (void)close(SockFD);      */
-		
-		/* Process connection */
-		
+        
+                /* Process connection */
+        
                 log(LOG_NOTICE,
                     "Connect from %s (%s:%d->%s:%d)",
                     client_name,
@@ -429,8 +437,8 @@ int main(int ac, char **av)
     }
     else
     {
-	/* Started from inetd */
-	SrcSockFD = 0; // stdin
+        /* Started from inetd */
+        SrcSockFD = 0; // stdin
         
         log(LOG_NOTICE,
             "Connect (inted->%s:%d)",
@@ -450,17 +458,17 @@ int main(int ac, char **av)
  */
 static int writen(int fd, char *ptr, int nbytes)
 {
-    int	nleft, nwritten;
+    int nleft, nwritten;
 
     nleft = nbytes;
     while (nleft > 0)
     {
-	nwritten = write(fd, ptr, nleft);
-	if(nwritten <= 0)
-	    return(nwritten);		/* error */
+        nwritten = write(fd, ptr, nleft);
+        if(nwritten <= 0)
+            return(nwritten);       /* error */
 
-	nleft -= nwritten;
-	ptr   += nwritten;
+        nleft -= nwritten;
+        ptr   += nwritten;
     }
     return(nbytes - nleft);
 }
@@ -473,7 +481,7 @@ static void daemon_start(void)
     /* Maybe I should do 2 forks here? */
     
     if(fork())
-	exit(0);
+        exit(0);
     chdir("/");
     umask(0);
     (void) close(0);
@@ -503,29 +511,29 @@ void pass_all( int fd, int client )
         tv.tv_sec  = SELECT_TIMOEOUT_SEC;
         tv.tv_usec = SELECT_TIMOEOUT_MSEC;
         
-	retval = select(nsock, &in, nil, nil, &tv);
+        retval = select(nsock, &in, nil, nil, &tv);
         
-	switch (retval)
-	{
-	case  0 :
-	    /* Nothing to receive */
-	    break;
-	case -1:
-	    /* Error occured */
+        switch (retval)
+        {
+        case  0 :
+            /* Nothing to receive */
+            break;
+        case -1:
+            /* Error occured */
             log(LOG_ERR, "i/o error - %s", strerror(errno));
-	    return;
-	default:
-	    if(FD_ISSET( fd, &in))
-		retval = pass_one(fd, client);
-	    else if(FD_ISSET( client, &in))
-		retval = pass_one(client, fd);
-	    else
-		retval = -1;
-	    if( retval < 0)
-		return;
-	    if(Delay > 0)
-		sleep(Delay);
-	}
+            return;
+        default:
+            if(FD_ISSET( fd, &in))
+                retval = pass_one(fd, client);
+            else if(FD_ISSET( client, &in))
+                retval = pass_one(client, fd);
+            else
+                retval = -1;
+            if( retval < 0)
+                return;
+            if(Delay > 0)
+                sleep(Delay);
+        }
     }
 }
 
@@ -536,10 +544,10 @@ static int get_hostaddr(const char *name)
     int             a1,a2,a3,a4;
     
     if (sscanf(name,"%d.%d.%d.%d",&a1,&a2,&a3,&a4) == 4)
-	res = inet_addr(name);
+        res = inet_addr(name);
     else
     {
-	he = gethostbyname(name);
+        he = gethostbyname(name);
         if (he)
             memcpy(&res , he->h_addr , he->h_length);
     }
@@ -553,21 +561,21 @@ static int pass_one( int in, int out )
     char buff[MBUFSIZ];
     
     if ((nread = readln(in, buff,MBUFSIZ)) <= 0)
-	return -1;
+        return -1;
     else
     {
         if (isStripping)
         {
-            char *bufp;	
-	    for (bufp = buff+nread-1; bufp >= buff; bufp--)
-	        *bufp = *bufp&0177;
-	}
+            char *bufp; 
+            for (bufp = buff+nread-1; bufp >= buff; bufp--)
+                *bufp = *bufp&0177;
+        }
 
-	if(writen(out, buff, nread) != nread)
-	{
+        if(writen(out, buff, nread) != nread)
+        {
             log(LOG_ERR,"write error");
             return -1;
-	}
+        }
     }
     return 0;
 }
@@ -617,7 +625,7 @@ void write_pid( char* filename )
     if((f=fopen(filename,"w"))==nil)
     {
         log(LOG_WARNING,"Can't open file '%s' to write PID",filename);
-	return;
+        return;
     }
 
     fprintf( f,"%d",getpid());
@@ -626,9 +634,9 @@ void write_pid( char* filename )
 }
 
 /**
-  * Load list of allowed POP3 accounts from external file
-  * One per line
-  */
+ * Load list of allowed POP3 accounts from external file
+ * One per line
+ */
 static struct lst_record *load_pop3_list(const char *popfile)
 {
     FILE *f;
@@ -639,27 +647,27 @@ static struct lst_record *load_pop3_list(const char *popfile)
     if((f=fopen(popfile,"r"))==nil)
     {
         log(LOG_ERR,"Can't open POP3 file: %s",popfile);
-	return nil;
+        return nil;
     }
 
     while((str==fgets(str,2040,f)))
     {
-	if(*str=='#') continue; /* comment */
+        if(*str=='#') continue; /* comment */
 
-	firstword(str);
-	if(*str=='\0') continue;
+        firstword(str);
+        if(*str=='\0') continue;
         log(LOG_INFO,"Adding '%s' to POP3 users list",str);
 
-	if(first==nil)
-	{
-	    first=(struct lst_record *)malloc(sizeof(struct lst_record));
-	    last=first;
-	} else {
-	    last->next=(struct lst_record *)malloc(sizeof(struct lst_record));
-	    last=last->next;
-	}
-	last->s=strdup(str);
-	last->next=nil;
+        if(first==nil)
+        {
+            first=(struct lst_record *)malloc(sizeof(struct lst_record));
+            last=first;
+        } else {
+            last->next=(struct lst_record *)malloc(sizeof(struct lst_record));
+            last=last->next;
+        }
+        last->s=strdup(str);
+        last->next=nil;
     }
 
     fclose(f);
@@ -667,16 +675,16 @@ static struct lst_record *load_pop3_list(const char *popfile)
 }
 
 /**
-  * Check if given account is OK to proxy
-  */
+ * Check if given account is OK to proxy
+ */
 static int check_pop3_list(struct lst_record *lst, char *acc)
 {
     while (lst)
     {
-	if(strcmp(lst->s, acc) == 0)
-	    return 1; /* found */
-	else
-	    lst = lst->next;
+        if(strcmp(lst->s, acc) == 0)
+            return 1; /* found */
+        else
+            lst = lst->next;
     }
     return 0;
 }
@@ -695,12 +703,17 @@ static int  readln(int fd, char *buf, int siz)
     nread = read(fd, buf, siz);
     if(nread <= 0)
     {
-	if(nread < 0)
-	    log(LOG_ERR,"read error");
-	return -1;
+        if(nread < 0)
+            log(LOG_ERR,"read error");
+        return -1;
     } else
     {
-	return nread;
+        if (Tracefile)
+        {
+            // do tracing;
+            trace(fd, buf, nread);
+        }
+        return nread;
     }
 }
 
@@ -869,7 +882,7 @@ int open_remote(const char *rhost, int rportn, const char *src_name)
     if ((DstSockFD = socket(AF_INET, SOCK_STREAM, 0)) == -1)
     {
         log(LOG_ERR,"Can't create socket - %s ", strerror(errno));
-	return -1;
+        return -1;
     }
     
     remote_addr.sin_family      = AF_INET;
@@ -879,13 +892,13 @@ int open_remote(const char *rhost, int rportn, const char *src_name)
     if (remote_addr.sin_addr.s_addr == -1)
     {
         log(LOG_ERR,"Unknown host %s", dest_host);
-	return -1;
+        return -1;
     }
 
     if (connect(DstSockFD, (struct sockaddr *) &remote_addr, sizeof(remote_addr)))
     {
         log(LOG_ERR,"connect error to %s:%d - %s", dest_host, dest_port, strerror(errno));
-	return -1;
+        return -1;
     }
     
     if (HTTPSProxyHost && https_connect(DstSockFD, rhost, rportn))
@@ -956,14 +969,14 @@ static void logclose(void)
  * This function should be used as central logging facility.
  * 'type' argument should be one of following:
  *
- *  LOG_EMERG	system is unusable 
- *  LOG_ALERT	action must be taken immediately 
- *  LOG_CRIT	critical conditions 
- *  LOG_ERR	error conditions 
- *  LOG_WARNING	warning conditions 
- *  LOG_NOTICE	normal but significant condition 
- *  LOG_INFO	informational 
- *  LOG_DEBUG	debug-level messages 
+ *  LOG_EMERG   system is unusable 
+ *  LOG_ALERT   action must be taken immediately 
+ *  LOG_CRIT    critical conditions 
+ *  LOG_ERR error conditions 
+ *  LOG_WARNING warning conditions 
+ *  LOG_NOTICE  normal but significant condition 
+ *  LOG_INFO    informational 
+ *  LOG_DEBUG   debug-level messages 
  */
 static void log(int type, char *format, ...)
 {
@@ -994,9 +1007,9 @@ static void log(int type, char *format, ...)
 # endif
 #endif
 #if HAVE_SYSLOG            
-	    syslog(type,buffer);
+            syslog(type,buffer);
 #endif
-	} else
+        } else
         {
             (void) fprintf(stderr, "simpleproxy[%d]:", (int)getpid());
             (void) vfprintf(stderr, format, ap);
@@ -1012,18 +1025,18 @@ static void ctrlc(int s)
     
     if(SockFD    !=-1) 
     {
-/*	(void)shutdown(SockFD,2); */
-	(void)close(SockFD   );
+/*  (void)shutdown(SockFD,2); */
+        (void)close(SockFD   );
     }
     if(SrcSockFD !=-1)
     {
-/*	(void)shutdown(SrcSockFD,2); */
-	close(SrcSockFD);
+/*  (void)shutdown(SrcSockFD,2); */
+        close(SrcSockFD);
     }
     if(DstSockFD !=-1)
     {
-/*	(void)shutdown(DstSockFD,2); */
-	close(DstSockFD );
+/*  (void)shutdown(DstSockFD,2); */
+        close(DstSockFD );
     }
 
     /* system V style. */
@@ -1046,7 +1059,7 @@ int str2bool(char *s)
                  strcasecmp(s,"ok")  &&
                  strcasecmp(s,"oui") &&
                  strcasecmp(s,"1")
-        );
+            );
 }
 
 void replace_string(char **dst, const char *src)
@@ -1132,4 +1145,42 @@ static char *base64_encode(char *plaintext)
     }
     *ogroup = '\0';
     return cryptext;
+}
+
+static void trace(int fd, char *buf, int siz)
+{
+    char peer_name[256];
+    char trace_header[256];
+    int trace_header_len;
+    struct sockaddr_in peer_addr;
+    int peer_addr_len = sizeof(peer_addr);
+    struct hostent *peer_host;
+    int tfd = open(Tracefile, O_CREAT | O_WRONLY| O_APPEND, S_IRUSR | S_IWUSR |  S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+
+    if (tfd < 0)
+    {
+        log(LOG_ERR,"Tracing is disabled, can't create/open trace file - %s", strerror(errno));
+        free(Tracefile);
+        Tracefile = nil;
+    }
+    else
+    {
+        
+        if (getpeername(fd, (struct sockaddr *)&peer_addr, &peer_addr_len) == 0)
+        {
+            peer_host = gethostbyaddr((char *)&peer_addr, peer_addr_len, AF_INET);
+            snprintf(peer_name, sizeof(peer_name)  - 1, "%s:%i",
+                    peer_host? (peer_host->h_name): inet_ntoa(peer_addr.sin_addr),
+                    ntohs(peer_addr.sin_port));
+        }
+        else
+            strcpy(peer_name, "unknown source");
+        trace_header_len = snprintf(trace_header, sizeof(trace_header) - 1,
+                                    "\n---------------- Read from: %s ---------------\n",
+                                    peer_name);
+        
+        write(tfd, trace_header, (trace_header_len < sizeof(trace_header) - 1)? trace_header_len: (sizeof(trace_header) - 1));
+        write(tfd, buf, siz);
+        close(tfd);
+    }
 }

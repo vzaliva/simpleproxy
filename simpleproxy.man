@@ -50,7 +50,7 @@ Local host and port name or number to bind for listening. Host name is optional.
 Remote host and port name or number
 .TP 8
 .B \-P \fP<\fIPOP3 users list\fP>
-If you specify this option simpleproxy will load list of
+If specified, simpleproxy will load list of
 users from the <filename> (one per line). After this it will be
 forwarding POP3 sessions only if client trying to authenificate as
 this user.
@@ -62,6 +62,9 @@ HTTPS proxy server host and port name or number.
 Authenticate to the HTTPS proxy server with the given userid and password.
 This option performs BASIC HTTP authentication as specified in RFC 2617.
 Used only in conjunction with -S.
+.TP 8
+.B \-t <\fItrace file\fP>
+If specified, simpleproxy will dump all data that passes through connection to the specified file.
 
 .SH BUGS\ \ \ \        
 Only \fItcp\fP ports are supported.
