@@ -1,5 +1,5 @@
-.TH SIMPLEPROXY 1 "Version 3.2"
-.ds ]W July 2000
+.TH SIMPLEPROXY 1 "Version 3.3"
+.ds ]W November 2003
 .SH NAME
 simpleproxy \- Simple tcp socket proxy
 .SH SYNOPSIS

@@ -2,6 +2,7 @@
 
 	* simpleproxy.c (parse_host_port): Patch from 'apollock' accepted
 	which fixes bug #823883.
+	Version 3.3
 
 2003-05-07  Vadim Zaliva  <lord@zembla.home.crocodile.org>
 
