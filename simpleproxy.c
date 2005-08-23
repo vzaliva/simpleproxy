@@ -1007,7 +1007,7 @@ static void log(int type, char *format, ...)
 # endif
 #endif
 #if HAVE_SYSLOG            
-            syslog(type,buffer);
+            syslog(type, "%s", buffer);
 #endif
         } else
         {
