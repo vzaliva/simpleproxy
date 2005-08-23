@@ -25,7 +25,7 @@
 	* simpleproxy.c: Integrated patch from Cedric Tefft <cedric@earthling.net>
 	adding HTTP proxy authentification support.
 
-2000-07-27  Vlad Karpinsky <vlad@crocodile.org>
+2000-07-27  Vlad Karpinsky <vlad@noir.crocodile.org>
 
 	* new version number 3.1
 
@@ -60,11 +60,11 @@
 
 	* cfg.c: new implementation.
 
-1999-06-07  Vlad Karpinsky  <vlad@crocodile.org>
+1999-06-07  Vlad Karpinsky  <vlad@noir.crocodile.org>
 
 	* simpleproxy.c Optimization, brush up.
 
-1999-05-27  Vlad Karpinsky  <vlad@crocodile.org>
+1999-05-27  Vlad Karpinsky  <vlad@noir.crocodile.org>
 
 	* simpleproxy.c New syntax for command line options (old is still supported). 
 	  Config file reading. Brush up.
@@ -94,7 +94,7 @@
 
 	* Makefile.in: GNU autoconf. (First step. Still needs better integraion with RPM building).
 
-Mon Nov 16 14:23:33 PST 1998 Vlad Karpinsky <vlad@crocodile.org>
+Mon Nov 16 14:23:33 PST 1998 Vlad Karpinsky <vlad@noir.crocodile.org>
 
 	* spec file updates from Pavel Roskin <pavel_roskin@geocities.com>
         * inserted.
@@ -107,7 +107,7 @@ Wed Nov 11 15:18:34 1998  Vadim Zaliva  <lord@freefall.freebsd.org>
 
 	* simpleproxy.man spelling and formating according to comments from Pavel Roskin <pavel_roskin@geocities.com>
 
-1998-09-14  Vlad Karpinsky <vlad@crocodile.org>
+1996-09-14  Vlad Karpinsky <vlad@noir.crocodile.org>
 	
 	* Version 2.2b-1 No changes. New version released.
 

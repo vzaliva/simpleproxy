@@ -78,8 +78,8 @@ inetd(1M), services(4), http://www.crocodile.org/software.html
 .SH AUTHOR
 .PP
 Vadim Zaliva <lord@crocodile.org>,
-Vladimir Karpinsky  <vlad@crocodile.org>
-Vadim Tymchenko <verylong@crocodile.org>
+Vladimir Karpinsky  <vlad@noir.crocodile.org>
+Vadim Tymchenko <verylong@noir.crocodile.org>
 
 .SH CONTRIBUTORS
 .PP

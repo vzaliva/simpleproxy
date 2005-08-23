@@ -1,10 +1,10 @@
 Name: simpleproxy
 Summary: Simple TCP/IP proxy.
-Packager: Vlad Karpinsky <vlad@crocodile.org>
+Packager: Vlad Karpinsky <vlad@noir.crocodile.org>
 Url: http://www.crocodile.org/software.html
 Version: 3.3
 Release: 1
-Copyright: Vadim Zaliva <lord@crocodile.org>, Vlad Karpinsky <vlad@crocodile.org>, Vadim Tymchenko <verylong@crocodile.org>
+Copyright: Vadim Zaliva <lord@crocodile.org>, Vlad Karpinsky <vlad@noir.crocodile.org>, Vadim Tymchenko <verylong@noir.crocodile.org>
 Group: Daemons
 Source: ftp://ftp.crocodile.org/pub/simpleproxy-3.3.tar.gz
 BuildRoot: /tmp/simpleproxy
