@@ -44,5 +44,3 @@ simpleproxy: simpleproxy.o cfg.o Makefile
 cfg.o: cfg.c cfg.h Makefile
 simpleproxy.o: simpleproxy.c cfg.h Makefile
 
-
-

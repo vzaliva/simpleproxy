@@ -1,3 +1,7 @@
+2005-08-25  Vlad Karpinsky <vlad@noir.crocodile.org>
+
+	* version 3.4 released
+
 2005-08-22  Vadim Zaliva  <lord@zembla.local>
 
 	* simpleproxy.c (log): Patch from Ulf Harnhammar
