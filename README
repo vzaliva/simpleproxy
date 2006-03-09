@@ -10,7 +10,7 @@ socket at remote host.
 
 If you specify '-P <filename>' option simpleproxy will load list of
 users from the <filename> (one per line). After this it will be
-forwarding POP3 sessions only if client trying to authenificate as
+forwarding POP3 sessions only if client trying to authenticate as
 this user.
 
 Tested on Linux, SunOS, Solaris.
