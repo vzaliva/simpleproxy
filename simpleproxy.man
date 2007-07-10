@@ -10,6 +10,7 @@ simpleproxy \- Simple tcp socket proxy
 [-V]
 [-d]
 [-i]
+[-u]
 -P <\fIPOP3 users file\fP>
 -L [<\fIlocal host\fP>:]<\fIlocal port\fP>
 -R <\fIremote host\fP>:<\fIremote port\fP>
@@ -58,10 +59,23 @@ this user.
 .B \-S <\fIproxy host\fP>:<\fIproxy port\fP>
 HTTPS proxy server host and port name or number.
 .TP 8
-.B \-a <\fIHTTP Auth User\fP>:<\fIHTTP Auth Password\fP>
+.B \-a <\fIHTTPS Auth User\fP>:<\fIHTTPS Auth Password\fP>
 Authenticate to the HTTPS proxy server with the given userid and password.
 This option performs BASIC HTTP authentication as specified in RFC 2617.
 Used only in conjunction with -S.
+.TP 8
+.B \-A <\fIHTTP Auth User\fP>:<\fIHTTP Auth Password\fP>
+Requires HTTP proxy authentication.
+Client browser must supply username and password to use this proxy.
+This option performs BASIC HTTP authentication as specified in RFC 2617.
+.TP 8
+.B \-u
+URLs of visited pages are emitted on stdout.
+It is used for logging or for remote lecturing, if the output is redirected
+to a remote command that change a dynamic web page, it is possible to 
+synchronize
+all the learner web browsers to the same page visited by the instructor.
+(see the "simple remote lecturing" project on sourceforge).
 .TP 8
 .B \-t <\fItrace file\fP>
 If specified, simpleproxy will dump all data that passes through connection to the specified file.
@@ -80,7 +94,7 @@ inetd(1M), services(4), http://www.crocodile.org/software.html
 Vadim Zaliva <lord@crocodile.org>,
 Vladimir Karpinsky  <vlad@noir.crocodile.org>
 Vadim Tymchenko <verylong@noir.crocodile.org>
-
+Renzo Davoli <renzo at cs dot unibo dot it>
 .SH CONTRIBUTORS
 .PP
 Pavel Roskin <pavel_roskin@geocities.com>,

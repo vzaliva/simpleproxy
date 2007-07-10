@@ -3,6 +3,7 @@ Simpleproxy v3.3
 Vadim Zaliva <lord@crocodile.org>
 Vlad Karpinsky <vlad@noir.crocodile.org>
 Vadim Tymchenko <verylong@noir.crocodile.org>
+Renzo Davoli <renzo@cs.unibo.it> (html probe & http authentication)
 
 Simpleproxy program acts as simple tcp proxy. It listens for local
 socket, and any connection to this port will be forwarded to another

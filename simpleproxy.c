@@ -10,6 +10,7 @@
  * Vadim Zaliva    <lord@crocodile.org>
  * Vlad  Karpinsky <vlad@noir.crocodile.org>
  * Vadim Tymchenko <verylong@noir.crocodile.org>
+ * Renzo Davoli <renzo@cs.unibo.it> (html probe & html basic authentication).
  *
  * Licence:
  * --------
@@ -33,7 +34,6 @@
  */
 
 /* #define DEBUG 1 */
-
 #include <stdio.h>
 #include <sys/param.h>
 #include <sys/types.h>
@@ -93,9 +93,23 @@
 #define SELECT_TIMOEOUT_SEC  5
 #define SELECT_TIMOEOUT_MSEC 0
 
-static char *SIMPLEPROXY_VERSION = "simpleproxy v3.4 by lord@crocodile.org,vlad@noir.crocodile.org,verylong@noir.crocodile.org";
-static char *SIMPLEPROXY_USAGE   = "simpleproxy -L <[host:]port> -R <host:port> [-d] [-v] [-V] [-7] [-i] [-p PID file] [-P <POP3 accounts list file>] [-f cfgfile] [-t tracefile] [-D delay in sec.] [-S <HTTPS proxy host:port> [-a <HTTP Auth user>:<HTTP Auth password>] ]";
-static char *PROXY_HEADER = "\nProxy-Authorization: Basic %s";
+static char *SIMPLEPROXY_VERSION = "simpleproxy v3.4 by lord@crocodile.org,vlad@noir.crocodile.org,verylong@noir.crocodile.org,renzo@cs.unibo.it";
+static char *SIMPLEPROXY_USAGE   = "simpleproxy -L <[host:]port> -R <host:port> [-d] [-v] [-V] [-7] [-i] [-u] [-p PID file] [-P <POP3 accounts list file>] [-f cfgfile] [-t tracefile] [-D delay in sec.] [-S <HTTPS proxy host:port> [-a <HTTPS Auth user>:<HTTPS Auth password>] ] [-A  <HTTP Auth user>:<HTTP Auth password>]";
+static char *PROXY_HEADER_FMT = "\r\nProxy-Authorization: Basic %s";
+static char *PROXY_HEADER = "\r\nProxy-Authorization: Basic ";
+static char AUTHMSG[]=
+"HTTP/1.1 407 Proxy Authorization Required\r\n"
+"Proxy-Authenticate: Basic realm=\"";
+static char AUTHMSG2[]= "\"\r\n"
+"Content-Type: text/html\r\n"
+"\r\n"
+"<HTML><HEAD>\r\n"
+"<TITLE>407 Proxy Authorization Required</TITLE>\r\n"
+"</HEAD><BODY>\r\n"
+"<H1>Proxy Authorization Required</H1>\r\n"
+"Login and Password required\r\n"
+"<hr>\r\nSimpleProxy\r\n"
+"</BODY></HTML>\r\n";
 
 struct lst_record
 {
@@ -106,7 +120,8 @@ struct lst_record
 static void daemon_start(void);
 static int  writen(int fd, char *ptr, int nbytes);
 static void pass_all(int fd, int client);
-static int  pass_one( int in, int out );
+static int  pass_out( int in, int out);
+static int  pass_in( int in, int out, int isHtmlProbe,char *authHash);
 static int  get_hostaddr(const char *name);
 static int  readln(int fd, char *buf, int siz);
 static void firstword(char *str);
@@ -120,7 +135,7 @@ static int  process_remote(const char *rhost, int rportn,const char *client_name
 static int  open_remote(const char *rhost, int rportn,const char *client_name);
 static void logopen(void);
 static void logclose(void);
-static void log(int, char *format, ...);
+static void logmsg(int, char *format, ...);
 static void ctrlc(int);
 static int  https_connect(int remoteFd, const char *remoteHost, int remotePort);
 static int  str2bool(char *s);
@@ -134,12 +149,14 @@ static int   isVerbose          = 0;
 static int   isDaemon           = 0;
 static int   isStripping        = 0;
 static int   isStartedFromInetd = 0;
-static int   isUsingHTTPAuth    = 0;
+static int   isUsingHTTPSAuth   = 0;
+static int   isHtmlProbe        = 0;
 static long  Delay              = 0;
 
 static char *HTTPSProxyHost     = nil;
 static int   HTTPSProxyPort     = -1;
-static char *HTTPBasicAuthString = nil;
+static char *HTTPSBasicAuthString = nil;
+static char *HTTPAuthHash = nil;
 static char *Tracefile          = nil;
 
 static int  SockFD    = -1,
@@ -164,11 +181,12 @@ int main(int ac, char **av)
     static struct Cfg *cfg = nil;
     char  *pidfile = nil;
     int    rsp = 1;
+    char  *https_auth = nil;
     char  *http_auth = nil;
-    char  *HTTPAuthHash = nil;
+    char  *HTTPSAuthHash = nil;
 
     /* Check for the arguments, and overwrite values from cfg file */
-    while((c = getopt(ac, av, "iVv7dhL:R:H:f:p:P:D:S:s:a:t:")) != -1)
+    while((c = getopt(ac, av, "iVv7dhuL:R:H:f:p:P:D:S:s:a:A:t:")) != -1)
         switch (c)
         {
         case 'v':
@@ -180,6 +198,9 @@ int main(int ac, char **av)
         case 'd':
             isDaemon++;
             break;
+				case 'u':
+						isHtmlProbe++;
+						break;
         case 'p':
             replace_string(&pidfile, optarg);
             break;
@@ -189,7 +210,7 @@ int main(int ac, char **av)
             {
                 if((cfg=readcfg(cfgfile))==nil)
                 {
-                    log(LOG_ERR,"Error reading cfg file.");
+                    logmsg(LOG_ERR,"Error reading cfg file.");
                     return 1;
                 }
                 else
@@ -204,6 +225,8 @@ int main(int ac, char **av)
                         isDaemon = str2bool(cfgfind("Daemon", cfg, 0));
                     if (!isStripping)
                         isStripping = str2bool(cfgfind("Strip8bit", cfg, 0));
+                    if (!isHtmlProbe)
+                        isHtmlProbe = str2bool(cfgfind("HtmlProbe", cfg, 0));
                     
                     tmp = cfgfind("LocalPort", cfg, 0);
                     if (tmp && lportn == -1)
@@ -233,7 +256,14 @@ int main(int ac, char **av)
                     tmp = cfgfind("TraceFile", cfg, 0);
                     if(tmp && !Tracefile)
                         replace_string(&Tracefile, tmp);
-                    
+                    tmp = cfgfind("https_auth", cfg, 0);
+                    if(tmp && !https_auth) {
+											isUsingHTTPSAuth = 1;
+											replace_string(&https_auth, tmp);
+										}
+                    tmp = cfgfind("http_auth", cfg, 0);
+                    if(tmp && !http_auth)
+											replace_string(&http_auth, tmp);
                     freecfg(cfg);
                 }
             }
@@ -271,8 +301,11 @@ int main(int ac, char **av)
         case 'a':
             if((HTTPSProxyHost == nil) && (HTTPSProxyPort == -1))
                 fprintf(stderr, "Warning! Proxy authorization (-a) meaningless without HTTPS parameters (-S)\n");
-            isUsingHTTPAuth = 1;
-            http_auth = optarg;
+            isUsingHTTPSAuth = 1;
+            replace_string(&https_auth,optarg);
+            break;
+        case 'A':
+            replace_string(&http_auth,optarg);
             break;
         case 't':
             replace_string(&Tracefile, optarg);
@@ -283,16 +316,19 @@ int main(int ac, char **av)
 
     /* let us check options compatibility and completness*/
 
-    if(isUsingHTTPAuth)
+    if(isUsingHTTPSAuth)
     {
-        HTTPAuthHash        = base64_encode(http_auth);
-        HTTPBasicAuthString = malloc(strlen(HTTPAuthHash) + strlen(PROXY_HEADER));
-        sprintf(HTTPBasicAuthString,PROXY_HEADER,HTTPAuthHash);
-        free(HTTPAuthHash);
+        HTTPSAuthHash        = base64_encode(https_auth);
+        HTTPSBasicAuthString = malloc(strlen(HTTPSAuthHash) + strlen(PROXY_HEADER_FMT));
+        sprintf(HTTPSBasicAuthString,PROXY_HEADER_FMT,HTTPSAuthHash);
+        free(HTTPSAuthHash);
     } else
     {
-        HTTPBasicAuthString = "";
+        HTTPSBasicAuthString = "";
     }
+
+		if(http_auth) 
+			HTTPAuthHash = base64_encode(http_auth);
 
     if (isStartedFromInetd && lportn > 0)
         errflg++;
@@ -318,7 +354,7 @@ int main(int ac, char **av)
     logopen();
 
     if(signal(SIGINT,ctrlc)==SIG_ERR)
-        log(LOG_ERR,"Error installing interrupt handler.");
+        logmsg(LOG_ERR,"Error installing interrupt handler.");
 
     if(lportn <= 1024 && geteuid()!=0 && !isStartedFromInetd)
     {
@@ -327,7 +363,7 @@ int main(int ac, char **av)
             logopen();
             isVerbose++;
         }
-        log(LOG_ERR,"You must be root to run SIMPLEPROXY on reserved port");
+        logmsg(LOG_ERR,"You must be root to run SIMPLEPROXY on reserved port");
         fatal();
     }
 
@@ -345,7 +381,7 @@ int main(int ac, char **av)
     
         if((SockFD = socket(AF_INET,SOCK_STREAM,0)) < 0)
         {
-            log(LOG_ERR,"Error creating socket.");
+            logmsg(LOG_ERR,"Error creating socket.");
             fatal();
         }
     
@@ -355,19 +391,19 @@ int main(int ac, char **av)
         serv_addr.sin_port = htons(lportn);
 
         if (setsockopt(SockFD, SOL_SOCKET, SO_REUSEADDR, (void*)&rsp, sizeof(rsp)))
-            log(LOG_ERR,"Error setting socket options");
+            logmsg(LOG_ERR,"Error setting socket options");
         
         if (bind(SockFD, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
         {
-            log(LOG_ERR,"Error binding socket.");
+            logmsg(LOG_ERR,"Error binding socket.");
             fatal();
         }
         
-        log(LOG_INFO,"Waiting for connections.");
+        logmsg(LOG_INFO,"Waiting for connections.");
 
         if (listen(SockFD,5) < 0)
         {
-            log(LOG_ERR,"Error listening socket: %s", strerror(errno));
+            logmsg(LOG_ERR,"Error listening socket: %s", strerror(errno));
             fatal();
         }
     
@@ -381,7 +417,7 @@ int main(int ac, char **av)
             {
                 if (errno == EINTR || errno == ECHILD) /* Interrupt after SIGCHLD */
                     continue;
-                log(LOG_ERR, "accept error - %s", strerror(errno));
+                logmsg(LOG_ERR, "accept error - %s", strerror(errno));
                 fatal();
             }
             
@@ -390,7 +426,7 @@ int main(int ac, char **av)
             switch (fork())
             {
             case -1: /* fork error */
-                log(LOG_ERR,"fork error - %s", strerror(errno));
+                logmsg(LOG_ERR,"fork error - %s", strerror(errno));
                 break;
                 
             case 0: /* Child */
@@ -408,7 +444,7 @@ int main(int ac, char **av)
         
                 /* Process connection */
         
-                log(LOG_NOTICE,
+                logmsg(LOG_NOTICE,
                     "Connect from %s (%s:%d->%s:%d)",
                     client_name,
                     ((lhost && *lhost)? lhost: "ANY"),     lportn,
@@ -417,7 +453,7 @@ int main(int ac, char **av)
                 if (process_remote(rhost, rportn, client_name))
                     fatal();
                 
-                log(LOG_NOTICE,
+                logmsg(LOG_NOTICE,
                     "Connect from %s (%s:%d->%s:%d) closed",
                     client_name,
                     ((lhost && *lhost)? lhost: "ANY"), lportn,
@@ -440,12 +476,12 @@ int main(int ac, char **av)
         /* Started from inetd */
         SrcSockFD = 0; // stdin
         
-        log(LOG_NOTICE,
+        logmsg(LOG_NOTICE,
             "Connect (inted->%s:%d)",
             (rhost && *rhost)? rhost: "localhost", rportn);
         
         process_remote(rhost, rportn, "inted");
-        log(LOG_NOTICE,
+        logmsg(LOG_NOTICE,
             "Connect (inted->%s:%d) closed",
             (rhost && *rhost)? rhost: "localhost", rportn);
     }    
@@ -520,13 +556,13 @@ void pass_all( int fd, int client )
             break;
         case -1:
             /* Error occured */
-            log(LOG_ERR, "i/o error - %s", strerror(errno));
+            logmsg(LOG_ERR, "i/o error - %s", strerror(errno));
             return;
         default:
             if(FD_ISSET( fd, &in))
-                retval = pass_one(fd, client);
+                retval = pass_out(fd, client);
             else if(FD_ISSET( client, &in))
-                retval = pass_one(client, fd);
+                retval = pass_in(client, fd, isHtmlProbe, HTTPAuthHash);
             else
                 retval = -1;
             if( retval < 0)
@@ -555,7 +591,109 @@ static int get_hostaddr(const char *name)
 
 }
 
-static int pass_one( int in, int out )
+/* credit: some code for html probe has been taken from dsniff (renzo davoli)*/
+
+static int strrindex (const char *s, int c, int pos)
+{
+	if (pos >= 0) {
+		pos--;
+		while (pos >= 0  && s[pos] != c)
+			pos--;
+	}
+	return pos;
+}
+
+	static int
+is_display_uri(char *uri) 
+{
+	static char *good_prefixes[] = { NULL };
+	static char *good_suffixes[] = { ".html", ".htm", "/", ".shtml",
+		".cgi", ".asp", ".php3", ".txt",".pdf", 
+		".xml", ".asc", NULL };
+#ifdef INSEARCH
+	static char *good_infixes[] = { ".cgi", ".asp", ".php3", NULL };
+#endif
+		   int len, slen, pos;
+			 char **pp, *p;
+
+			 /* printf("is_display_uri %s\n",uri);*/
+
+			 /* Get URI length, without QUERY_INFO */
+			 if ((p = strchr(uri, '?')) != NULL) {
+				 len = p - uri;
+			 }
+			 /* Get URI length, without TAG */
+			 else if ((p = strchr(uri, '#')) != NULL) {
+				 len = p - uri;
+			 } 
+			 else {
+				 /* no '?', no '#', maybe dir */
+				 len = strlen(uri);
+				 pos=strrindex(uri,'/',len);
+				 if (pos >= 0) {
+					 if (strchr(&uri[pos+1],'.') == NULL &&
+							 strchr(&uri[pos+1],'=') == NULL &&
+							 strchr(&uri[pos+1],'&') == NULL)
+						 return 1;
+				 }
+			 }
+
+			 for (pp = good_suffixes; *pp != NULL; pp++) {
+				 if (len < (slen = strlen(*pp))) continue;
+				 if (strncasecmp(&uri[len - slen], *pp, slen) == 0)
+					 return (1);
+			 }
+			 for (pp = good_prefixes; *pp != NULL; pp++) {
+				 if (len < (slen = strlen(*pp))) continue;
+				 if (strncasecmp(uri, *pp, slen) == 0)
+					 return (1);
+			 }
+#ifdef INSEARCH
+			 for (pp = good_infixes; *pp != NULL; pp++) {
+				 for (pos = len; pos > (slen = strlen(*pp)); pos = strrindex(uri,'/',pos)) {
+					 if (strncasecmp(&uri[pos - slen], *pp, slen) == 0)
+						            return (1);
+				 }
+			 }
+#endif
+			 return (0);
+}
+
+static char *strxdup(const char *s, size_t n)
+{
+	char *result=malloc(n+1);
+	if (result != NULL) {
+		memcpy(result,s,n);
+		result[n]=0;
+	}
+	return result;
+}
+
+	static int
+process_http_request(u_char *data, int len)
+{
+	char *uri, *enduri;
+
+	data[len]=0;
+	//printf("process_http_request(%d)\n%s\nEND\n",getpid(),data);
+	if (strncmp(data, "GET ", 4)==0) {
+		uri = data+4;
+		if ((enduri=strchr(uri,' ')) != NULL) {
+			uri=strxdup(uri,(size_t)(enduri-uri));
+
+			//printf("uri %s\n",uri);
+
+			if (is_display_uri(uri)) {
+				printf("%s\n",uri);
+				fflush(stdout);
+			}
+			free(uri);
+		}
+	} 
+	return 0;
+}
+
+static int pass_out( int in, int out)
 {
     int nread;
     char buff[MBUFSIZ];
@@ -573,11 +711,111 @@ static int pass_one( int in, int out )
 
         if(writen(out, buff, nread) != nread)
         {
-            log(LOG_ERR,"write error");
+					logmsg(LOG_ERR,"write error");
+					return -1;
+				}
+		}
+		return 0;
+}
+
+static int auth_check (char *buf, int len, char *http_authhash)
+{
+	char *match;
+	if ((match=strstr(buf,PROXY_HEADER)) != NULL) {
+		int authlen=strlen(PROXY_HEADER)+strlen(http_authhash);
+		if (((match - buf)-authlen) <= len) {
+			if (strncmp(match+strlen(PROXY_HEADER),http_authhash,strlen(http_authhash))==0 && 
+					(*(match + authlen) == '\r' || *(match + authlen) == '\n')) {
+				memmove(match,match+authlen,(match-buf)-authlen);
+				return(len-authlen);
+			} else
+				return 0;
+		}
+		else
+			return 0;
+	} else
+		return 0;
+}
+
+static int pass_in( int in, int out , int htmlProbe, char *http_authhash)
+{
+	int nread;
+	static char *buff=NULL;
+	static int size=0;
+	static int len=0;
+	/* printf("HASH %s|=== %d\n",http_authhash,getpid()); */
+	
+	if ((size - len) == 0) {
+		if (size==0) size=MBUFSIZ;
+		else size *= 2;
+		buff = realloc(buff,size+1);
+		if (!buff)
+			return -1;
+	}
+
+	if ((nread = readln(in, buff+len, size-len)) <= 0)
+		        return -1;
+	{
+		char *pos;
+		len+=nread;
+		buff[len]=0;
+		/* printf("R %d %d ==%s==\n",nread,len,buff); */
+
+		if (htmlProbe || http_authhash != NULL) {
+			/* http basic parsing (allowing persistent connections and pipelining) */
+
+			while ((pos=strstr(buff,"\r\n\r\n")) != NULL) {
+				int nout;
+				nout=nread=(pos-buff)+4;
+				/* printf("C %d %d ==%s==\n",nread,len,buff); */
+				if (isStripping)
+				{
+					char *bufp; 
+					for (bufp = buff+nread-1; bufp >= buff; bufp--)
+						*bufp = *bufp&0177;
+				}
+
+				/* authentication management */
+				if (http_authhash != NULL && (nout = auth_check(buff,nread,http_authhash)) == 0) {
+					writen(in,AUTHMSG,sizeof(AUTHMSG));
+					writen(in,"SimpleProxy",11);
+					writen(in,AUTHMSG2,sizeof(AUTHMSG2));
+					return -1;
+				} else {
+					if(writen(out, buff, nout) != nout)
+					{
+						logmsg(LOG_ERR,"write error");
+						return -1;
+					}
+
+					/* probe: display on stdout significant URLs */
+					if (htmlProbe) 
+						process_http_request(buff, nout);
+				}
+
+				len -= nread;
+				if (len>0)
+					memmove(buff,buff+nread,len);
+				else
+					*buff=0;
+			}
+		} else {
+			if (isStripping)
+			{
+				char *bufp;
+				for (bufp = buff+nread-1; bufp >= buff; bufp--)
+					*bufp = *bufp&0177;
+			}
+			if(writen(out, buff, len) != len)
+			{
+				logmsg(LOG_ERR,"write error");
             return -1;
         }
-    }
-    return 0;
+			len -= nread;
+			*buff=0;
+		}
+	}
+	return 0;
 }
 
 void child_dead( int stat )
@@ -624,7 +862,7 @@ void write_pid( char* filename )
     
     if((f=fopen(filename,"w"))==nil)
     {
-        log(LOG_WARNING,"Can't open file '%s' to write PID",filename);
+        logmsg(LOG_WARNING,"Can't open file '%s' to write PID",filename);
         return;
     }
 
@@ -646,7 +884,7 @@ static struct lst_record *load_pop3_list(const char *popfile)
     
     if((f=fopen(popfile,"r"))==nil)
     {
-        log(LOG_ERR,"Can't open POP3 file: %s",popfile);
+        logmsg(LOG_ERR,"Can't open POP3 file: %s",popfile);
         return nil;
     }
 
@@ -656,7 +894,7 @@ static struct lst_record *load_pop3_list(const char *popfile)
 
         firstword(str);
         if(*str=='\0') continue;
-        log(LOG_INFO,"Adding '%s' to POP3 users list",str);
+        logmsg(LOG_INFO,"Adding '%s' to POP3 users list",str);
 
         if(first==nil)
         {
@@ -704,7 +942,7 @@ static int  readln(int fd, char *buf, int siz)
     if(nread <= 0)
     {
         if(nread < 0)
-            log(LOG_ERR,"read error");
+            logmsg(LOG_ERR,"read error");
         return -1;
     } else
     {
@@ -846,7 +1084,7 @@ int process_remote(const char *dest_host, int dest_port, const char *client_name
         
     if (POPList && /* Doing POP3 proxy */ pop3_login(DstSockFD, SrcSockFD))
     {
-        log(LOG_ERR,"POP3 login failed for %s.", client_name);
+        logmsg(LOG_ERR,"POP3 login failed for %s.", client_name);
         return -1;
     }
     
@@ -881,7 +1119,7 @@ int open_remote(const char *rhost, int rportn, const char *src_name)
     
     if ((DstSockFD = socket(AF_INET, SOCK_STREAM, 0)) == -1)
     {
-        log(LOG_ERR,"Can't create socket - %s ", strerror(errno));
+        logmsg(LOG_ERR,"Can't create socket - %s ", strerror(errno));
         return -1;
     }
     
@@ -891,13 +1129,13 @@ int open_remote(const char *rhost, int rportn, const char *src_name)
     
     if (remote_addr.sin_addr.s_addr == -1)
     {
-        log(LOG_ERR,"Unknown host %s", dest_host);
+        logmsg(LOG_ERR,"Unknown host %s", dest_host);
         return -1;
     }
 
     if (connect(DstSockFD, (struct sockaddr *) &remote_addr, sizeof(remote_addr)))
     {
-        log(LOG_ERR,"connect error to %s:%d - %s", dest_host, dest_port, strerror(errno));
+        logmsg(LOG_ERR,"connect error to %s:%d - %s", dest_host, dest_port, strerror(errno));
         return -1;
     }
     
@@ -914,20 +1152,20 @@ static int https_connect(int DstSockFD, const char *remoteHost, int remotePort)
     long  n;
 
     /* prepare command and connect to remote side */
-    sprintf(buff, "CONNECT %s:%i HTTP/1.0\nUser-agent: %s%s\n\n",
-            remoteHost, remotePort, SIMPLEPROXY_VERSION,HTTPBasicAuthString);
+    sprintf(buff, "CONNECT %s:%i HTTP/1.0\nUser-agent: %s%s\r\n\r\n",
+            remoteHost, remotePort, SIMPLEPROXY_VERSION,HTTPSBasicAuthString);
     n = strlen(buff);
     
     if (writen(DstSockFD, buff, n) != n)
     {
-        log(LOG_ERR, "write error - %s", strerror(errno));
+        logmsg(LOG_ERR, "write error - %s", strerror(errno));
         return -1; /* write error */
     }
     
-    /* reading responce from the server */
+    /* reading response from the server */
     if (readln(DstSockFD,buff,MBUFSIZ) <= 0)
     {
-        log(LOG_ERR,"read error - %s", strerror(errno));
+        logmsg(LOG_ERR,"read error - %s", strerror(errno));
         return -1; /* read error */
     }
 
@@ -936,7 +1174,7 @@ static int https_connect(int DstSockFD, const char *remoteHost, int remotePort)
         return -1;
     if((n = strtol(s, &s, 10)) != 200)
     {
-        log(LOG_ERR,"error in connect through HTTPS proxy. Proxy responded:\n %s", buff);
+        logmsg(LOG_ERR,"error in connect through HTTPS proxy. Proxy responded:\n %s", buff);
         return -1;
     }
     return 0; /* ok */
@@ -978,7 +1216,7 @@ static void logclose(void)
  *  LOG_INFO    informational 
  *  LOG_DEBUG   debug-level messages 
  */
-static void log(int type, char *format, ...)
+static void logmsg(int type, char *format, ...)
 {
 #ifndef DEBUG
     if(type==LOG_DEBUG)
@@ -1021,7 +1259,7 @@ static void log(int type, char *format, ...)
 
 static void ctrlc(int s)
 {
-    log(LOG_INFO,"Interrupted... Shutting down connections");
+    logmsg(LOG_INFO,"Interrupted... Shutting down connections");
     
     if(SockFD    !=-1) 
     {
@@ -1041,7 +1279,7 @@ static void ctrlc(int s)
 
     /* system V style. */
 /*    if(signal(SIGINT,ctrlc)==SIG_ERR)
-      log(LOG_INFO,"Error installing interrupt handler."); */
+      logmsg(LOG_INFO,"Error installing interrupt handler."); */
     exit(1);
 }
 
@@ -1159,7 +1397,7 @@ static void trace(int fd, char *buf, int siz)
 
     if (tfd < 0)
     {
-        log(LOG_ERR,"Tracing is disabled, can't create/open trace file - %s", strerror(errno));
+        logmsg(LOG_ERR,"Tracing is disabled, can't create/open trace file - %s", strerror(errno));
         free(Tracefile);
         Tracefile = nil;
     }
