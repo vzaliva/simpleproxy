@@ -170,7 +170,7 @@ struct lst_record *POPList = nil;
 
 int main(int ac, char **av)
 {
-    int    clien;
+    socklen_t    clien;
     struct sockaddr_in cli_addr, serv_addr;
     int    lportn = -1, rportn = -1;
     char  *lhost = nil, *rhost = nil;
@@ -679,7 +679,7 @@ static char *strxdup(const char *s, size_t n)
 }
 
 	static int
-process_http_request(u_char *data, int len)
+process_http_request(char *data, int len)
 {
 	char *uri, *enduri;
 
@@ -1102,6 +1102,7 @@ int process_remote(const char *dest_host, int dest_port, const char *client_name
     shutdown(DstSockFD, 2);
     close(DstSockFD);
     DstSockFD = -1;
+    return 0;
 }
 
 int open_remote(const char *rhost, int rportn, const char *src_name)
@@ -1400,7 +1401,7 @@ static void trace(int fd, char *buf, int siz)
     char trace_header[256];
     int trace_header_len;
     struct sockaddr_in peer_addr;
-    int peer_addr_len = sizeof(peer_addr);
+    socklen_t peer_addr_len = sizeof(peer_addr);
     struct hostent *peer_host;
     int tfd = open(Tracefile, O_CREAT | O_WRONLY| O_APPEND, S_IRUSR | S_IWUSR |  S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 
