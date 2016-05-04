@@ -36,10 +36,10 @@ install: simpleproxy
 	$(INSTALL)   simpleproxy.man $(mandir)/man1/simpleproxy.1
 
 simpleproxy: simpleproxy.o cfg.o Makefile
-	$(CC) $(CFLAGS) -o simpleproxy simpleproxy.o cfg.o $(LIBS)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o simpleproxy simpleproxy.o cfg.o $(LIBS)
 
 .c.o:
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -c $<
 
 cfg.o: cfg.c cfg.h Makefile
 simpleproxy.o: simpleproxy.c cfg.h Makefile
