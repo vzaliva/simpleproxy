@@ -78,6 +78,9 @@
 #include <arpa/inet.h>
 #include <ctype.h>
 
+#include <sys/socket.h>
+#include <netdb.h>
+
 #include "cfg.h"
 
 #ifndef nil
@@ -184,6 +187,9 @@ int main(int ac, char **av)
     char  *https_auth = nil;
     char  *http_auth = nil;
     char  *HTTPSAuthHash = nil;
+    struct sockaddr *sa;
+    int    len;
+    char   hbuf[NI_MAXHOST];
 
     /* Check for the arguments, and overwrite values from cfg file */
     while((c = getopt(ac, av, "iVv7dhuL:R:H:f:p:P:D:S:s:a:A:t:")) != -1)
@@ -430,8 +436,11 @@ int main(int ac, char **av)
                 break;
                 
             case 0: /* Child */
-                hp = gethostbyaddr((char *)&cli_addr, clien, AF_INET);
-                client_name = strdup(hp?(hp->h_name): inet_ntoa(cli_addr.sin_addr));
+		if (getnameinfo((const struct sockaddr *) &cli_addr, len,
+					hbuf, sizeof(hbuf), NULL, 0, 0) == 0)
+			client_name = strdup(hbuf);
+		else
+			client_name = inet_ntoa(cli_addr.sin_addr);
 
                 /*
                  * I don't know is that a bug, but on Irix 6.2 parent 
