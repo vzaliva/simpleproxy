@@ -527,7 +527,7 @@ static void daemon_start(void)
     
     if(fork())
         exit(0);
-    chdir("/");
+    if(chdir("/")) {} /* supressing warn_unused_result */
     umask(0);
     (void) close(0);
     (void) close(1);
