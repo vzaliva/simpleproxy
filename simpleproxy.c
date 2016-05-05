@@ -204,9 +204,9 @@ int main(int ac, char **av)
         case 'd':
             isDaemon++;
             break;
-				case 'u':
-						isHtmlProbe++;
-						break;
+        case 'u':
+            isHtmlProbe++;
+            break;
         case 'p':
             replace_string(&pidfile, optarg);
             break;
@@ -264,12 +264,12 @@ int main(int ac, char **av)
                         replace_string(&Tracefile, tmp);
                     tmp = cfgfind("https_auth", cfg, 0);
                     if(tmp && !https_auth) {
-											isUsingHTTPSAuth = 1;
-											replace_string(&https_auth, tmp);
-										}
+                        isUsingHTTPSAuth = 1;
+                        replace_string(&https_auth, tmp);
+                    }
                     tmp = cfgfind("http_auth", cfg, 0);
                     if(tmp && !http_auth)
-											replace_string(&http_auth, tmp);
+                        replace_string(&http_auth, tmp);
                     freecfg(cfg);
                 }
             }
@@ -333,8 +333,8 @@ int main(int ac, char **av)
         HTTPSBasicAuthString = "";
     }
 
-		if(http_auth) 
-			HTTPAuthHash = base64_encode(http_auth);
+    if(http_auth) 
+        HTTPAuthHash = base64_encode(http_auth);
 
     if (isStartedFromInetd && lportn > 0)
         errflg++;
@@ -436,11 +436,11 @@ int main(int ac, char **av)
                 break;
                 
             case 0: /* Child */
-		if (getnameinfo((const struct sockaddr *) &cli_addr, len,
-					hbuf, sizeof(hbuf), NULL, 0, 0) == 0)
-			client_name = strdup(hbuf);
-		else
-			client_name = inet_ntoa(cli_addr.sin_addr);
+                if (getnameinfo((const struct sockaddr *) &cli_addr, len,
+                                hbuf, sizeof(hbuf), NULL, 0, 0) == 0)
+                    client_name = strdup(hbuf);
+                else
+                    client_name = inet_ntoa(cli_addr.sin_addr);
 
                 /*
                  * I don't know is that a bug, but on Irix 6.2 parent 
@@ -454,19 +454,19 @@ int main(int ac, char **av)
                 /* Process connection */
         
                 logmsg(LOG_NOTICE,
-                    "Connect from %s (%s:%d->%s:%d)",
-                    client_name,
-                    ((lhost && *lhost)? lhost: "ANY"),     lportn,
-                    (rhost && *rhost)? rhost: "localhost", rportn);
+                       "Connect from %s (%s:%d->%s:%d)",
+                       client_name,
+                       ((lhost && *lhost)? lhost: "ANY"),     lportn,
+                       (rhost && *rhost)? rhost: "localhost", rportn);
 
                 if (process_remote(rhost, rportn, client_name))
                     fatal();
                 
                 logmsg(LOG_NOTICE,
-                    "Connect from %s (%s:%d->%s:%d) closed",
-                    client_name,
-                    ((lhost && *lhost)? lhost: "ANY"), lportn,
-                    (rhost && *rhost)? rhost: "localhost", rportn);
+                       "Connect from %s (%s:%d->%s:%d) closed",
+                       client_name,
+                       ((lhost && *lhost)? lhost: "ANY"), lportn,
+                       (rhost && *rhost)? rhost: "localhost", rportn);
                 
                 shutdown(SrcSockFD, 2);
                 close(SrcSockFD);
@@ -486,13 +486,13 @@ int main(int ac, char **av)
         SrcSockFD = 0; // stdin
         
         logmsg(LOG_NOTICE,
-            "Connect (inetd->%s:%d)",
-            (rhost && *rhost)? rhost: "localhost", rportn);
+               "Connect (inetd->%s:%d)",
+               (rhost && *rhost)? rhost: "localhost", rportn);
         
         process_remote(rhost, rportn, "inetd");
         logmsg(LOG_NOTICE,
-            "Connect (inetd->%s:%d) closed",
-            (rhost && *rhost)? rhost: "localhost", rportn);
+               "Connect (inetd->%s:%d) closed",
+               (rhost && *rhost)? rhost: "localhost", rportn);
     }    
     return 0;
 }
@@ -612,60 +612,60 @@ static int strrindex (const char *s, int c, int pos)
 	return pos;
 }
 
-	static int
+static int
 is_display_uri(char *uri) 
 {
 	static char *good_prefixes[] = { NULL };
 	static char *good_suffixes[] = { ".html", ".htm", "/", ".shtml",
-		".cgi", ".asp", ".php3", ".txt",".pdf", 
-		".xml", ".asc", NULL };
+                                     ".cgi", ".asp", ".php3", ".txt",".pdf", 
+                                     ".xml", ".asc", NULL };
 #ifdef INSEARCH
 	static char *good_infixes[] = { ".cgi", ".asp", ".php3", NULL };
 #endif
-		   int len, slen, pos;
-			 char **pp, *p;
+    int len, slen, pos;
+    char **pp, *p;
 
-			 /* printf("is_display_uri %s\n",uri);*/
+    /* printf("is_display_uri %s\n",uri);*/
 
-			 /* Get URI length, without QUERY_INFO */
-			 if ((p = strchr(uri, '?')) != NULL) {
-				 len = p - uri;
-			 }
-			 /* Get URI length, without TAG */
-			 else if ((p = strchr(uri, '#')) != NULL) {
-				 len = p - uri;
-			 } 
-			 else {
-				 /* no '?', no '#', maybe dir */
-				 len = strlen(uri);
-				 pos=strrindex(uri,'/',len);
-				 if (pos >= 0) {
-					 if (strchr(&uri[pos+1],'.') == NULL &&
-							 strchr(&uri[pos+1],'=') == NULL &&
-							 strchr(&uri[pos+1],'&') == NULL)
-						 return 1;
-				 }
-			 }
+    /* Get URI length, without QUERY_INFO */
+    if ((p = strchr(uri, '?')) != NULL) {
+        len = p - uri;
+    }
+    /* Get URI length, without TAG */
+    else if ((p = strchr(uri, '#')) != NULL) {
+        len = p - uri;
+    } 
+    else {
+        /* no '?', no '#', maybe dir */
+        len = strlen(uri);
+        pos=strrindex(uri,'/',len);
+        if (pos >= 0) {
+            if (strchr(&uri[pos+1],'.') == NULL &&
+                strchr(&uri[pos+1],'=') == NULL &&
+                strchr(&uri[pos+1],'&') == NULL)
+                return 1;
+        }
+    }
 
-			 for (pp = good_suffixes; *pp != NULL; pp++) {
-				 if (len < (slen = strlen(*pp))) continue;
-				 if (strncasecmp(&uri[len - slen], *pp, slen) == 0)
-					 return (1);
-			 }
-			 for (pp = good_prefixes; *pp != NULL; pp++) {
-				 if (len < (slen = strlen(*pp))) continue;
-				 if (strncasecmp(uri, *pp, slen) == 0)
-					 return (1);
-			 }
+    for (pp = good_suffixes; *pp != NULL; pp++) {
+        if (len < (slen = strlen(*pp))) continue;
+        if (strncasecmp(&uri[len - slen], *pp, slen) == 0)
+            return (1);
+    }
+    for (pp = good_prefixes; *pp != NULL; pp++) {
+        if (len < (slen = strlen(*pp))) continue;
+        if (strncasecmp(uri, *pp, slen) == 0)
+            return (1);
+    }
 #ifdef INSEARCH
-			 for (pp = good_infixes; *pp != NULL; pp++) {
-				 for (pos = len; pos > (slen = strlen(*pp)); pos = strrindex(uri,'/',pos)) {
-					 if (strncasecmp(&uri[pos - slen], *pp, slen) == 0)
-						            return (1);
-				 }
-			 }
+    for (pp = good_infixes; *pp != NULL; pp++) {
+        for (pos = len; pos > (slen = strlen(*pp)); pos = strrindex(uri,'/',pos)) {
+            if (strncasecmp(&uri[pos - slen], *pp, slen) == 0)
+                return (1);
+        }
+    }
 #endif
-			 return (0);
+    return (0);
 }
 
 static char *strxdup(const char *s, size_t n)
@@ -678,7 +678,7 @@ static char *strxdup(const char *s, size_t n)
 	return result;
 }
 
-	static int
+static int
 process_http_request(char *data, int len)
 {
 	char *uri, *enduri;
@@ -720,11 +720,11 @@ static int pass_out( int in, int out)
 
         if(writen(out, buff, nread) != nread)
         {
-					logmsg(LOG_ERR,"write error");
-					return -1;
-				}
-		}
-		return 0;
+            logmsg(LOG_ERR,"write error");
+            return -1;
+        }
+    }
+    return 0;
 }
 
 static int auth_check (char *buf, int len, char *http_authhash)
@@ -734,7 +734,7 @@ static int auth_check (char *buf, int len, char *http_authhash)
 		int authlen=strlen(PROXY_HEADER)+strlen(http_authhash);
 		if (((match - buf)-authlen) <= len) {
 			if (strncmp(match+strlen(PROXY_HEADER),http_authhash,strlen(http_authhash))==0 && 
-					(*(match + authlen) == '\r' || *(match + authlen) == '\n')) {
+                (*(match + authlen) == '\r' || *(match + authlen) == '\n')) {
 				memmove(match,match+authlen,(match-buf)-authlen);
 				return(len-authlen);
 			} else
@@ -763,7 +763,7 @@ static int pass_in( int in, int out , int htmlProbe, char *http_authhash)
 	}
 
 	if ((nread = readln(in, buff+len, size-len)) <= 0)
-		        return -1;
+        return -1;
 	{
 		char *pos;
 		len+=nread;
@@ -818,8 +818,8 @@ static int pass_in( int in, int out , int htmlProbe, char *http_authhash)
 			if(writen(out, buff, len) != len)
 			{
 				logmsg(LOG_ERR,"write error");
-            return -1;
-        }
+                return -1;
+            }
 			len -= nread;
 			*buff=0;
 		}
@@ -858,10 +858,10 @@ void parse_host_port(const char *src, char ** h_ptr, int *p_ptr)
         
         
         *p_ptr = (isdigit(*tmp))?
-            atoi(tmp):
-            (((se = getservbyname(tmp, "tcp")) == nil)?
-             -1:
-             ntohs(se->s_port));
+        atoi(tmp):
+        (((se = getservbyname(tmp, "tcp")) == nil)?
+         -1:
+         ntohs(se->s_port));
     }
 }
 
@@ -1307,7 +1307,7 @@ int str2bool(char *s)
                  strcasecmp(s,"ok")  &&
                  strcasecmp(s,"oui") &&
                  strcasecmp(s,"1")
-            );
+        );
 }
 
 void replace_string(char **dst, const char *src)
@@ -1418,8 +1418,8 @@ static void trace(int fd, char *buf, int siz)
         {
             peer_host = gethostbyaddr(&peer_addr.sin_addr, peer_addr_len, peer_addr.sin_family);
             snprintf(peer_name, sizeof(peer_name)  - 1, "%s:%i",
-                    peer_host? (peer_host->h_name): inet_ntoa(peer_addr.sin_addr),
-                    ntohs(peer_addr.sin_port));
+                     peer_host? (peer_host->h_name): inet_ntoa(peer_addr.sin_addr),
+                     ntohs(peer_addr.sin_port));
         }
         else
             strcpy(peer_name, "unknown source");
