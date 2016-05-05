@@ -21,12 +21,13 @@ TCP port and forward them to anoter port on a remote host via TCP.
 
 It could be used as standalone daemon, or run via `inetd`.
 
-Installation
-------------
-
 For various options such as POP3 user screening, logging, HTTP proxy
 support, see man page (man simpleproxy).
         
+
+Installation
+------------
+
 To install run `./configure`. Then, do 'make install'.
 
 License

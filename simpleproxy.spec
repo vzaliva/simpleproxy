@@ -28,5 +28,5 @@ make install
 %defattr(-,root,root)
 /usr/bin/simpleproxy
 /usr/man/man1/simpleproxy.1.gz
-%doc README pop3users.txt ChangeLog
+%doc README.txt pop3users.txt ChangeLog
 
