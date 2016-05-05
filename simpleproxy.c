@@ -1404,6 +1404,7 @@ static void trace(int fd, char *buf, int siz)
     socklen_t peer_addr_len = sizeof(peer_addr);
     struct hostent *peer_host;
     int tfd = open(Tracefile, O_CREAT | O_WRONLY| O_APPEND, S_IRUSR | S_IWUSR |  S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+    ssize_t unused_bytes_written;
 
     if (tfd < 0)
     {
@@ -1426,9 +1427,10 @@ static void trace(int fd, char *buf, int siz)
         trace_header_len = snprintf(trace_header, sizeof(trace_header) - 1,
                                     "\n---------------- Read from: %s ---------------\n",
                                     peer_name);
-        
-        write(tfd, trace_header, (trace_header_len < sizeof(trace_header) - 1)? trace_header_len: (sizeof(trace_header) - 1));
-        write(tfd, buf, siz);
+
+        /* TODO: check actual return value and log error if needed */
+        unused_bytes_written = write(tfd, trace_header, (trace_header_len < sizeof(trace_header) - 1)? trace_header_len: (sizeof(trace_header) - 1));
+        unused_bytes_written = write(tfd, buf, siz);
         close(tfd);
     }
 }
