@@ -1,0 +1,6 @@
+Makefile
+*.o
+config.cache
+config.log
+config.status
+simpleproxy
