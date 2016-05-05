@@ -1416,7 +1416,7 @@ static void trace(int fd, char *buf, int siz)
         
         if (getpeername(fd, (struct sockaddr *)&peer_addr, &peer_addr_len) == 0)
         {
-            peer_host = gethostbyaddr((char *)&peer_addr, peer_addr_len, AF_INET);
+            peer_host = gethostbyaddr(&peer_addr.sin_addr, peer_addr_len, peer_addr.sin_family);
             snprintf(peer_name, sizeof(peer_name)  - 1, "%s:%i",
                     peer_host? (peer_host->h_name): inet_ntoa(peer_addr.sin_addr),
                     ntohs(peer_addr.sin_port));
