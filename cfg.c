@@ -43,7 +43,6 @@ static int cfg_entry_match(const void *a,const void *b)
 
 char *cfgfind(const char *name,struct Cfg *cfg, int offset)
 {
-    int j;
     struct Dict **res;
     
     res=(struct Dict **)bsearch(name,
@@ -130,9 +129,6 @@ struct Cfg *readcfg(const char *name)
         WHITESPACE,
         COMMENT
     } state=START;
-    
-    int n,i;
-    char *pname,*pvalue;
     
     if((f=fopen(name,"rb"))==NULL)
         return NULL;
