@@ -14,7 +14,7 @@ simpleproxy \- Simple tcp socket proxy
 -P <\fIPOP3 users file\fP>
 -L [<\fIlocal host\fP>:]<\fIlocal port\fP>
 -R <\fIremote host\fP>:<\fIremote port\fP>
--S <\fIproxy host\fP>:<\fIproxy port\fP>
+[-S <\fIproxy host\fP>:<\fIproxy port\fP>]
  
 .br
 .SH DESCRIPTION
