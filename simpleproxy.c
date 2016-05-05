@@ -486,12 +486,12 @@ int main(int ac, char **av)
         SrcSockFD = 0; // stdin
         
         logmsg(LOG_NOTICE,
-            "Connect (inted->%s:%d)",
+            "Connect (inetd->%s:%d)",
             (rhost && *rhost)? rhost: "localhost", rportn);
         
-        process_remote(rhost, rportn, "inted");
+        process_remote(rhost, rportn, "inetd");
         logmsg(LOG_NOTICE,
-            "Connect (inted->%s:%d) closed",
+            "Connect (inetd->%s:%d) closed",
             (rhost && *rhost)? rhost: "localhost", rportn);
     }    
     return 0;
