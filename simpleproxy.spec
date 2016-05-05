@@ -11,7 +11,7 @@ BuildRoot: /tmp/simpleproxy
 
 %description
 Simple TCP/IP proxy. Also provides simple POP3 pre-auth.
-Can use HTTPs proxy to penetrate firewalls.
+Can use HTTPs proxy to traverse firewalls.
 
 %prep
 rm -rf $RPM_BUILD_ROOT
