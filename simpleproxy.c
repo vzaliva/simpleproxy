@@ -96,7 +96,7 @@
 #define SELECT_TIMOEOUT_SEC  5
 #define SELECT_TIMOEOUT_MSEC 0
 
-static char *SIMPLEPROXY_VERSION = "simpleproxy v3.4 by lord@crocodile.org,vlad@noir.crocodile.org,verylong@noir.crocodile.org,renzo@cs.unibo.it";
+static char *SIMPLEPROXY_VERSION = "simpleproxy v3.5 by lord@crocodile.org,vlad@noir.crocodile.org,verylong@noir.crocodile.org,renzo@cs.unibo.it";
 static char *SIMPLEPROXY_USAGE   = "simpleproxy -L <[host:]port> -R <host:port> [-d] [-v] [-V] [-7] [-i] [-u] [-p PID file] [-P <POP3 accounts list file>] [-f cfgfile] [-t tracefile] [-D delay in sec.] [-S <HTTPS proxy host:port> [-a <HTTPS Auth user>:<HTTPS Auth password>] ] [-A  <HTTP Auth user>:<HTTP Auth password>]";
 static char *PROXY_HEADER_FMT = "\r\nProxy-Authorization: Basic %s";
 static char *PROXY_HEADER = "\r\nProxy-Authorization: Basic ";

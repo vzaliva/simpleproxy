@@ -2,7 +2,7 @@ Name: simpleproxy
 Summary: Simple TCP/IP proxy.
 Packager: Vlad Karpinsky <vlad@noir.crocodile.org>
 Url: http://www.crocodile.org/software.html
-Version: 3.4
+Version: 3.5
 Release: 1
 Copyright: Vadim Zaliva <lord@crocodile.org>, Vlad Karpinsky <vlad@noir.crocodile.org>, Vadim Tymchenko <verylong@noir.crocodile.org>
 Group: Daemons

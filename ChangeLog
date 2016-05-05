@@ -1,3 +1,7 @@
+2016-05-04  Vadim Zaliva  <lord@lambda13.local>
+
+	* simpleproxy.c: Fixed but where trace logs incorrectly resolve source and destination IP addresses. Addressed sitation where simpleproxy performs poorly when nss_mdns is in use. Minor code cleanup.
+
 2005-08-25  Vlad Karpinsky <vlad@noir.crocodile.org>
 
 	* version 3.4 released
