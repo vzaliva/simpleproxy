@@ -187,7 +187,6 @@ int main(int ac, char **av)
     char  *https_auth = nil;
     char  *http_auth = nil;
     char  *HTTPSAuthHash = nil;
-    struct sockaddr *sa;
     int    len;
     char   hbuf[NI_MAXHOST];
 
@@ -1397,16 +1396,16 @@ static char *base64_encode(char *plaintext)
 
 static void trace(int fd, char *buf, int siz)
 {
-    char peer_name[256];
+    char peer_name[NI_MAXHOST+16]; /* 16 bytes from column and port number */
     char trace_header[256];
     int trace_header_len;
     struct sockaddr_in peer_addr;
     socklen_t peer_addr_len = sizeof(peer_addr);
     struct hostent *peer_host;
-    int tfd = open(Tracefile, O_CREAT | O_WRONLY| O_APPEND, S_IRUSR | S_IWUSR |  S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
     ssize_t unused_bytes_written;
+    int tfd = open(Tracefile, O_CREAT | O_WRONLY| O_APPEND, S_IRUSR | S_IWUSR |  S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
 
-    if (tfd < 0)
+    if(tfd < 0)
     {
         logmsg(LOG_ERR,"Tracing is disabled, can't create/open trace file - %s", strerror(errno));
         free(Tracefile);
@@ -1414,16 +1413,23 @@ static void trace(int fd, char *buf, int siz)
     }
     else
     {
-        
-        if (getpeername(fd, (struct sockaddr *)&peer_addr, &peer_addr_len) == 0)
+        if(getpeername(fd, (struct sockaddr *)&peer_addr, &peer_addr_len) == 0)
         {
-            peer_host = gethostbyaddr(&peer_addr.sin_addr, peer_addr_len, peer_addr.sin_family);
+            char hbuf[NI_MAXHOST];
+            char *client_host_name;
+            
+            if(getnameinfo((const struct sockaddr *) &peer_addr, peer_addr_len,
+                           hbuf, sizeof(hbuf), NULL, 0, 0) == 0)
+                client_host_name = hbuf;
+            else
+                client_host_name = inet_ntoa(peer_addr.sin_addr);
+            
             snprintf(peer_name, sizeof(peer_name)  - 1, "%s:%i",
-                     peer_host? (peer_host->h_name): inet_ntoa(peer_addr.sin_addr),
-                     ntohs(peer_addr.sin_port));
+                     client_name, ntohs(peer_addr.sin_port));
         }
         else
             strcpy(peer_name, "unknown source");
+        
         trace_header_len = snprintf(trace_header, sizeof(trace_header) - 1,
                                     "\n---------------- Read from: %s ---------------\n",
                                     peer_name);
