@@ -1,4 +1,4 @@
-.TH SIMPLEPROXY 1 "Version 3.3"
+.TH SIMPLEPROXY 1 "Version 3.5"
 .ds ]W November 2003
 .SH NAME
 simpleproxy \- Simple tcp socket proxy

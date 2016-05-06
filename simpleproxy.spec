@@ -6,7 +6,7 @@ Version: 3.5
 Release: 1
 Copyright: Vadim Zaliva <lord@crocodile.org>, Vlad Karpinsky <vlad@noir.crocodile.org>, Vadim Tymchenko <verylong@noir.crocodile.org>
 Group: Daemons
-Source: ftp://ftp.crocodile.org/pub/simpleproxy-3.4.tar.gz
+Source: simpleproxy-3.5.tar.gz
 BuildRoot: /tmp/simpleproxy
 
 %description
