@@ -3,6 +3,8 @@
 # Solaris 2.5
 #CFLAGS=-fd -O -v -Xc -D__EXTENSIONS__ -DSUN
 
+VPATH=@top_srcdir@
+
 CC=@CC@
 CFLAGS=@CFLAGS@ @DEFS@
 LIBS=@LIBS@
@@ -33,7 +35,7 @@ install: simpleproxy
 	$(top_srcdir)/mkinstalldirs $(bindir)
 	$(INSTALL)   simpleproxy $(bindir)
 	$(top_srcdir)/mkinstalldirs $(mandir)/man1
-	$(INSTALL)   simpleproxy.man $(mandir)/man1/simpleproxy.1
+	$(INSTALL)   $(top_srcdir)/simpleproxy.man $(mandir)/man1/simpleproxy.1
 
 simpleproxy: simpleproxy.o cfg.o Makefile
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o simpleproxy simpleproxy.o cfg.o $(LIBS)
