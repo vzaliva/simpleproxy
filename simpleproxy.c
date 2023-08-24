@@ -161,6 +161,7 @@ static int   HTTPSProxyPort     = -1;
 static char *HTTPSBasicAuthString = nil;
 static char *HTTPAuthHash = nil;
 static char *Tracefile          = nil;
+static char *pidfile            = nil;
 
 static int  SockFD    = -1,
     SrcSockFD = -1,
@@ -182,7 +183,6 @@ int main(int ac, char **av)
     char  *cfgfile = nil;
     char  *popfile = nil;
     static struct Cfg *cfg = nil;
-    char  *pidfile = nil;
     int    rsp = 1;
     char  *https_auth = nil;
     char  *http_auth = nil;
@@ -1285,6 +1285,10 @@ static void ctrlc(int s)
 /*  (void)shutdown(DstSockFD,2); */
         close(DstSockFD );
     }
+    if(pidfile)
+    {
+        unlink(pidfile);
+    }
 
     /* system V style. */
 /*    if(signal(SIGINT,ctrlc)==SIG_ERR)
@@ -1327,6 +1331,8 @@ void fatal()
         close(SrcSockFD);
     if (DstSockFD != -1)
         close(DstSockFD);
+    if if(pidfile)
+        unlink(pidfile);
     logclose();
     exit(1);
 }
