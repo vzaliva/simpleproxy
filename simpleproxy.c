@@ -1331,7 +1331,7 @@ void fatal()
         close(SrcSockFD);
     if (DstSockFD != -1)
         close(DstSockFD);
-    if if(pidfile)
+    if(pidfile)
         unlink(pidfile);
     logclose();
     exit(1);
