@@ -731,10 +731,11 @@ static int auth_check (char *buf, int len, char *http_authhash)
     char *match;
     if ((match=strstr(buf,PROXY_HEADER)) != NULL) {
         int authlen=strlen(PROXY_HEADER)+strlen(http_authhash);
-        if (((match - buf)-authlen) <= len) {
+        int auth_end = (match - buf)+authlen;
+        if (auth_end <=  len) {
             if (strncmp(match+strlen(PROXY_HEADER),http_authhash,strlen(http_authhash))==0 &&
                 (*(match + authlen) == '\r' || *(match + authlen) == '\n')) {
-                memmove(match,match+authlen,(match-buf)-authlen);
+                memmove(match,match+authlen,len-auth_end);
                 return(len-authlen);
             } else
                 return 0;
