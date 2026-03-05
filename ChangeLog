@@ -1,3 +1,8 @@
+2026-03-05  Vadim Zaliva  <lord@lambda13.local>
+
+	* version 3.6 released
+	* simpleproxy.c (auth_check): Fix critical OOB memmove.
+
 2016-05-05  Vadim Zaliva  <lord@lambda13.local>
 
 	* version 3.5 released
@@ -48,7 +53,6 @@
 1999-12-10  Vadim Zaliva  <lord@crocodile.org>
 
 	* simpleproxy.spec (Name): this codebase will be called version 3.0
-
 	* simpleproxy.c: minor compilation warning fixes and win32 compatibility from Pavel Roskin <pavel_roskin@geocities.com>
 
 1999-09-24  Vadim Zaliva  <lord@crocodile.org>
@@ -58,7 +62,6 @@
 1999-09-15  Vadim Zaliva  <lord@crocodile.org>
 
 	* cfg.c: max token length check.
-
 	* Makefile.in (distclean): distclean added
 
 1999-08-17  Vadim Zaliva  <lord@crocodile.org>
@@ -69,7 +72,6 @@
 
 	* simpleproxy.c (trim): some funny code removed.
 	(main): releasing memory after reading cfg.
-
 	* cfg.c: new implementation.
 
 1999-06-07  Vlad Karpinsky  <vlad@noir.crocodile.org>
@@ -98,7 +100,6 @@
 1999-04-16  Vadim Zaliva  <lord@crocodile.org>
 
 	* sample.cfg: sample cfg file created.
-
 	* simpleproxy.c: Reading cfg file mechanism replaced by new one from cfg.c. All platform dependency checks are done with Autoconf now. Different portability improvements.
 	GPL comment added to simpleproxy.c
 
@@ -120,7 +121,7 @@ Wed Nov 11 15:18:34 1998  Vadim Zaliva  <lord@freefall.freebsd.org>
 	* simpleproxy.man spelling and formating according to comments from Pavel Roskin <pavel_roskin@geocities.com>
 
 1996-09-14  Vlad Karpinsky <vlad@noir.crocodile.org>
-	
+
 	* Version 2.2b-1 No changes. New version released.
 
 1998-09-13  Vadim Zaliva <lord@crocodile.org>
@@ -130,7 +131,4 @@ Wed Nov 11 15:18:34 1998  Vadim Zaliva  <lord@freefall.freebsd.org>
 1998-09-10  Vadim Zaliva  <lord@crocodile.org>
 
 	* FTP and WWW locations added to readme. Chagelog added to spec.
-
 	* spec file corrected to reflect recent version number (2.2a)
-	
-

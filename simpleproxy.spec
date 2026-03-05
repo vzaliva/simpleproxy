@@ -2,11 +2,11 @@ Name: simpleproxy
 Summary: Simple TCP/IP proxy.
 Packager: Vlad Karpinsky <vlad@noir.crocodile.org>
 Url: https://github.com/vzaliva/simpleproxy
-Version: 3.5
+Version: 3.6
 Release: 1
 Copyright: Vadim Zaliva <lord@crocodile.org>, Vlad Karpinsky <vlad@noir.crocodile.org>, Vadim Tymchenko <verylong@noir.crocodile.org>
 Group: Daemons
-Source: https://github.com/vzaliva/simpleproxy/archive/v3.5.tar.gz
+Source: https://github.com/vzaliva/simpleproxy/archive/v3.6.tar.gz
 BuildRoot: /tmp/simpleproxy
 
 %description
@@ -29,4 +29,3 @@ make install
 /usr/bin/simpleproxy
 /usr/man/man1/simpleproxy.1.gz
 %doc README.txt pop3users.txt ChangeLog
-
