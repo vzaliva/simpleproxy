@@ -250,7 +250,7 @@ int main(int ac, char **av)
                     if(tmp && !popfile)
                         replace_string(&popfile, tmp);
                     tmp = cfgfind("LocalHost", cfg, 0);
-                    if(tmp && !rhost)
+                    if(tmp && !lhost)
                         parse_host_port(tmp, &lhost, &lportn);
                     tmp = cfgfind("RemoteHost", cfg, 0);
                     if(tmp && !rhost)
